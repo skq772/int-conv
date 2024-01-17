@@ -48,6 +48,7 @@ int main(int, char**)
 #endif
 
 	// Create window with graphics context
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	GLFWwindow* window = glfwCreateWindow(300, 200, "int-conv", nullptr, nullptr);
 	if (window == nullptr)
 		return 1;
@@ -66,6 +67,8 @@ int main(int, char**)
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
+	std::string input = "123";
+	
 	// main loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -74,8 +77,6 @@ int main(int, char**)
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		const ImGuiViewport* viewport = ImGui::GetMainViewport();
-
-		std::string input = "123";
 
 		ImGui::SetNextWindowPos(viewport->WorkPos);
 		ImGui::SetNextWindowSize(viewport->WorkSize);
