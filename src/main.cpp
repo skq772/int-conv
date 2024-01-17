@@ -86,10 +86,22 @@ int main(int, char**)
 				ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar
 			);
 			ImGui::Text("%.3fms %.1fFPS", 1000.0f / io.Framerate, io.Framerate);
-			ImGui::NewLine();
-
 			ImGui::InputText("##", &input);
-			ImGui::Text("%s", input.c_str());
+
+			if (ImGui::BeginTabBar("MainTabBar"))
+			{
+				if (ImGui::BeginTabItem("Ints"))
+				{
+					ImGui::Text("ints tab!");
+					ImGui::EndTabItem();
+				}
+				if (ImGui::BeginTabItem("Floats"))
+				{
+					ImGui::Text("floats tab!");
+					ImGui::EndTabItem();
+				}
+			}
+			ImGui::EndTabBar();
 
 			ImGui::End();
 		}
