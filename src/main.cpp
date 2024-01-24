@@ -172,14 +172,12 @@ void display_int_bits(u8 int_size) {
 		ImGui::SameLine(0, 0);
 
 		ImGui::Text("0");
-		if (ImGui::BeginItemTooltip())
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone))
 		{
 			if (i == 0)
-				ImGui::Text("Sign");
+				ImGui::SetTooltip("Sign");
 			else
-				ImGui::Text("%llu", 1ull << (int_size - i - 1));
-
-			ImGui::EndTooltip();
+				ImGui::SetTooltip("%llu", 1ull << (int_size - i - 1));
 		}
 	}
 }
