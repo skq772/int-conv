@@ -12,16 +12,33 @@
 #include <GLFW/glfw3.h>
 
 #include "stdvar.h"
+#include "convert.h"
 
 static void glfw_error_callback(int error, const char* description)
 {
 	fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-// display int bits with tooltips
-void display_int_bits(u8 int_size);
+// display bits with tooltips
+void display_int_bits(char* bits, u8 size)
+{
+	for (u8 i = 0; i < size; i++)
+	{
+		ImGui::Text("%c", bits[i]);
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone))
+		{
+			if (i == 0)
+				ImGui::SetTooltip("Sign");
+			else
+				ImGui::SetTooltip("%llu", 1ull << (size - i - 1));
+		}
 
-int main(int, char **)
+		if (i < size-1)
+			ImGui::SameLine(0, 0);
+	}
+}
+
+int main(int, char**)
 {
     // this is straight from the example code lol
 	glfwSetErrorCallback(glfw_error_callback);
@@ -71,7 +88,7 @@ int main(int, char **)
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
-	u8 step_one = 1;
+	u64 step_one = 1;
 
 	u64 input = 0;
 
@@ -105,7 +122,7 @@ int main(int, char **)
 				ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar
 			);
 			ImGui::Text("%.3fms %.1fFPS", 1000.0f / io.Framerate, io.Framerate);
-			ImGui::InputScalar("##", ImGuiDataType_U64, &input, &step_one);
+			ImGui::InputScalar("##", ImGuiDataType_S64, &input, &step_one);
 
 			if (ImGui::BeginTabBar("MainTabBar"))
 			{
@@ -118,17 +135,38 @@ int main(int, char **)
 					if (int_size > 64) int_size = 64;
 					if (int_size <  2) int_size = 2;
 
+					// conversions
+					char* result;
+
 					ImGui::Text("sign-magn");
-					ImGui::Text("");
-					display_int_bits(int_size);
+					result = convert::integerToSMBinary(input, int_size);
+					if (result == 0)
+						ImGui::Text("--");
+					else
+					{
+						display_int_bits(result, int_size);
+						free(result);
+					}
 
 					ImGui::Text("1s' compl");
-					ImGui::Text("");
-					display_int_bits(int_size);
+					result = convert::integerToOCBinary(input, int_size);
+					if (result == 0)
+						ImGui::Text("--");
+					else
+					{
+						display_int_bits(result, int_size);
+						free(result);
+					}
 
 					ImGui::Text("2's compl");
-					ImGui::Text("");
-					display_int_bits(int_size);
+					result = convert::integerToTCBinary(input, int_size);
+					if (result == 0)
+						ImGui::Text("--");
+					else
+					{
+						display_int_bits(result, int_size);
+						free(result);
+					}
 
 					ImGui::EndTabItem();
 				}
@@ -164,20 +202,4 @@ int main(int, char **)
 	glfwTerminate();
 
 	return 0;
-}
-
-void display_int_bits(u8 int_size) {
-	for (u8 i = 0; i < int_size; i++)
-	{
-		ImGui::SameLine(0, 0);
-
-		ImGui::Text("0");
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone))
-		{
-			if (i == 0)
-				ImGui::SetTooltip("Sign");
-			else
-				ImGui::SetTooltip("%llu", 1ull << (int_size - i - 1));
-		}
-	}
 }
