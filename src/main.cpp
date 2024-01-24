@@ -11,15 +11,19 @@
 #endif
 #include <GLFW/glfw3.h>
 
+#include "stdvar.h"
 
 static void glfw_error_callback(int error, const char* description)
 {
 	fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-int main(int, char**)
+// display int bits with tooltips
+void display_int_bits(u8 int_size);
+
+int main(int, char **)
 {
-	// this is straight from the example code lol
+    // this is straight from the example code lol
 	glfwSetErrorCallback(glfw_error_callback);
 	if (!glfwInit())
 		return 1;
@@ -67,18 +71,31 @@ int main(int, char**)
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
-	unsigned long long step_one = 1;
+	u8 step_one = 1;
 
-	unsigned long long input = 0;
+	u64 input = 0;
+
+	u8 int_size = 8;
+
+	// the width of a 0 which should be wider than a 1,
+	// this is used to check if we need the wider window size.
+	// seems it needs to be called after NewFrame() so i init it to 1
+	// (to avoid division by zero later)
+	float zero_width = 1;
 	
 	// main loop
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
+
+		glfwSetWindowSize(window, (int_size+1 > (300/zero_width)) ? 470 : 300, 200);
+
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+		if (zero_width == 1) zero_width = ImGui::CalcTextSize("0").x;
 
 		ImGui::SetNextWindowPos(viewport->WorkPos);
 		ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -94,12 +111,31 @@ int main(int, char**)
 			{
 				if (ImGui::BeginTabItem("Ints"))
 				{
-					ImGui::Text("ints tab!");
+					ImGui::AlignTextToFramePadding();
+					ImGui::Text("size: "); ImGui::SameLine();
+					//ImGui::SetNextItemWidth(ImGui::GetFontSize() * 2);
+					ImGui::InputScalar("##", ImGuiDataType_U8, &int_size, &step_one);
+					if (int_size > 64) int_size = 64;
+					if (int_size <  2) int_size = 2;
+
+					ImGui::Text("sign-magn");
+					ImGui::Text("");
+					display_int_bits(int_size);
+
+					ImGui::Text("1s' compl");
+					ImGui::Text("");
+					display_int_bits(int_size);
+
+					ImGui::Text("2's compl");
+					ImGui::Text("");
+					display_int_bits(int_size);
+
 					ImGui::EndTabItem();
 				}
 				if (ImGui::BeginTabItem("Floats"))
 				{
 					ImGui::Text("floats tab!");
+
 					ImGui::EndTabItem();
 				}
 			}
@@ -128,4 +164,22 @@ int main(int, char**)
 	glfwTerminate();
 
 	return 0;
+}
+
+void display_int_bits(u8 int_size) {
+	for (u8 i = 0; i < int_size; i++)
+	{
+		ImGui::SameLine(0, 0);
+
+		ImGui::Text("0");
+		if (ImGui::BeginItemTooltip())
+		{
+			if (i == 0)
+				ImGui::Text("Sign");
+			else
+				ImGui::Text("%llu", 1ull << (int_size - i - 1));
+
+			ImGui::EndTooltip();
+		}
+	}
 }
