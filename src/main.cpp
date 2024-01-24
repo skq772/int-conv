@@ -19,16 +19,52 @@ static void glfw_error_callback(int error, const char* description)
 	fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-// display bits with tooltips
-void display_int_bits(char* bits, u8 size)
+// the three types of conversions for ints
+enum IntConvType
 {
+	SignMagnitude,
+	OnesComplement,
+	TwosComplement
+};
+
+// display int bits with tooltips
+void display_int_bits(u64* number, u8 size, IntConvType conv_type)
+{
+	char* result;
+	switch (conv_type)
+	{
+		case IntConvType::SignMagnitude:
+			result = convert::integerToSMBinary(*number, size);
+			break;
+		case IntConvType::OnesComplement:
+			result = convert::integerToOCBinary(*number, size);
+			break;
+		case IntConvType::TwosComplement:
+			result = convert::integerToTCBinary(*number, size);
+			break;
+	}
+	if (result == 0)
+	{
+		ImGui::Text("--");
+		return;
+	}
+
+	ImGui::BeginGroup();
 	for (u8 i = 0; i < size; i++)
 	{
-		ImGui::Text("%c", bits[i]);
+		ImGui::Text("%c", result[i]);
+
+		// toggle bit on click
+		if (ImGui::IsItemClicked())
+		{
+			*number ^= 1ull << (size - i - 1);
+		}
+
+		// we need to handle tooltips ourselves because we want them to show up with no delay
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone))
 		{
 			if (i == 0)
-				ImGui::SetTooltip("Sign: %s", bits[0] == '1' ? "negative" : "positive");
+				ImGui::SetTooltip("Sign: %s", result[0] == '1' ? "negative" : "positive");
 			else
 				ImGui::SetTooltip("%llu", 1ull << (size - i - 1));
 		}
@@ -36,6 +72,9 @@ void display_int_bits(char* bits, u8 size)
 		if (i < size-1)
 			ImGui::SameLine(0, 0);
 	}
+	free(result);
+
+	ImGui::EndGroup();
 }
 
 int main(int, char**)
@@ -136,38 +175,14 @@ int main(int, char**)
 					if (int_size > 64) int_size = 64;
 					if (int_size <  2) int_size = 2;
 
-					// conversions
-					char* result;
-
 					ImGui::Text("sign-magn");
-					result = convert::integerToSMBinary(input, int_size);
-					if (result == 0)
-						ImGui::Text("--");
-					else
-					{
-						display_int_bits(result, int_size);
-						free(result);
-					}
+					display_int_bits(&input, int_size, IntConvType::SignMagnitude);
 
 					ImGui::Text("1s' compl");
-					result = convert::integerToOCBinary(input, int_size);
-					if (result == 0)
-						ImGui::Text("--");
-					else
-					{
-						display_int_bits(result, int_size);
-						free(result);
-					}
+					display_int_bits(&input, int_size, IntConvType::OnesComplement);
 
 					ImGui::Text("2's compl");
-					result = convert::integerToTCBinary(input, int_size);
-					if (result == 0)
-						ImGui::Text("--");
-					else
-					{
-						display_int_bits(result, int_size);
-						free(result);
-					}
+					display_int_bits(&input, int_size, IntConvType::TwosComplement);
 
 					ImGui::EndTabItem();
 				}
