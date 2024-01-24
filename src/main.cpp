@@ -67,7 +67,9 @@ int main(int, char**)
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
-	std::string input = "123";
+	unsigned long long step_one = 1;
+
+	unsigned long long input = 0;
 	
 	// main loop
 	while (!glfwWindowShouldClose(window))
@@ -86,7 +88,7 @@ int main(int, char**)
 				ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar
 			);
 			ImGui::Text("%.3fms %.1fFPS", 1000.0f / io.Framerate, io.Framerate);
-			ImGui::InputText("##", &input);
+			ImGui::InputScalar("##", ImGuiDataType_U64, &input, &step_one);
 
 			if (ImGui::BeginTabBar("MainTabBar"))
 			{
