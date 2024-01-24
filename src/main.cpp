@@ -28,7 +28,7 @@ void display_int_bits(char* bits, u8 size)
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone))
 		{
 			if (i == 0)
-				ImGui::SetTooltip("Sign");
+				ImGui::SetTooltip("Sign: %s", bits[0] == '1' ? "negative" : "positive");
 			else
 				ImGui::SetTooltip("%llu", 1ull << (size - i - 1));
 		}
@@ -122,6 +122,7 @@ int main(int, char**)
 				ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar
 			);
 			ImGui::Text("%.3fms %.1fFPS", 1000.0f / io.Framerate, io.Framerate);
+			ImGui::SetNextItemWidth(200);
 			ImGui::InputScalar("##", ImGuiDataType_S64, &input, &step_one);
 
 			if (ImGui::BeginTabBar("MainTabBar"))
@@ -130,7 +131,7 @@ int main(int, char**)
 				{
 					ImGui::AlignTextToFramePadding();
 					ImGui::Text("size: "); ImGui::SameLine();
-					//ImGui::SetNextItemWidth(ImGui::GetFontSize() * 2);
+					ImGui::SetNextItemWidth(80);
 					ImGui::InputScalar("##", ImGuiDataType_U8, &int_size, &step_one);
 					if (int_size > 64) int_size = 64;
 					if (int_size <  2) int_size = 2;
