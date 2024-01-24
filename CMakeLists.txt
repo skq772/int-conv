@@ -26,12 +26,20 @@ set(IMGUI_SOURCES
 	imgui/misc/cpp/imgui_stdlib.h
 	imgui/misc/cpp/imgui_stdlib.cpp
 )
+
+set(CURRENT_PROJECT_SOURCES
+	src/main.cpp
+	src/stdvar.h
+	src/convert.h
+	src/convert.c
+)
+
 include_directories(
 	imgui
 	imgui/misc/cpp
 	imgui/backends
 )
 
-add_executable(${PROJECT_NAME} src/main.cpp ${IMGUI_SOURCES})
+add_executable(${PROJECT_NAME} ${CURRENT_PROJECT_SOURCES} ${IMGUI_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC "imgui")
 target_link_libraries(${PROJECT_NAME} OpenGL::GL glfw)
