@@ -57,7 +57,11 @@ void display_int_bits(u64* number, u8 size, IntConvType conv_type)
 		// toggle bit on click
 		if (ImGui::IsItemClicked())
 		{
-			*number ^= 1ull << (size - i - 1);
+			if (i == 0)
+				// special case for the sign bit: invert the number
+			 	*number = 1 + ~(*number);
+			else
+				*number ^= 1ull << (size - i - 1);
 		}
 
 		// we need to handle tooltips ourselves because we want them to show up with no delay
@@ -160,9 +164,31 @@ int main(int, char**)
 				"main window", NULL,
 				ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar
 			);
-			ImGui::Text("%.3fms %.1fFPS", 1000.0f / io.Framerate, io.Framerate);
+			
 			ImGui::SetNextItemWidth(200);
 			ImGui::InputScalar("##", ImGuiDataType_S64, &input, &step_one);
+
+			{
+				ImGui::Text("%.3fms %.1fFPS", 1000.0f / io.Framerate, io.Framerate);
+
+				for (u8 byte_i = 0; byte_i < 8; byte_i++)
+				{
+					u8 byte = input >> ((byte_i^3) * 8);
+					// lol
+					ImGui::Text(
+						"%c%c%c%c%c%c%c%c",
+						((byte)&0x80) ? '1' : '0',
+						((byte)&0x40) ? '1' : '0',
+						((byte)&0x20) ? '1' : '0',
+						((byte)&0x10) ? '1' : '0',
+						((byte)&0x08) ? '1' : '0',
+						((byte)&0x04) ? '1' : '0',
+						((byte)&0x02) ? '1' : '0',
+						((byte)&0x01) ? '1' : '0'
+					);
+					if ((byte_i+1) % 4 != 0 && byte_i < 7) ImGui::SameLine();
+				}
+			}
 
 			if (ImGui::BeginTabBar("MainTabBar"))
 			{
