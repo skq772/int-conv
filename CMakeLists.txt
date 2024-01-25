@@ -31,7 +31,7 @@ set(CURRENT_PROJECT_SOURCES
 	src/main.cpp
 	src/stdvar.h
 	src/convert.h
-	src/convert.c
+	src/convert.cpp
 )
 
 include_directories(
