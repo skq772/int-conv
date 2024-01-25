@@ -1,7 +1,7 @@
 #include <stdio.h>
-#include <string>
+//#include <string>
 #include "imgui.h"
-#include "imgui_stdlib.h"
+//#include "imgui_stdlib.h"
 
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -76,8 +76,7 @@ void display_int_bits(u64* number, u8 size, IntConvType conv_type)
 		if (i < size-1)
 			ImGui::SameLine(0, 0);
 	}
-	free(result);
-
+	delete[] result;
 	ImGui::EndGroup();
 }
 
