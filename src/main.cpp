@@ -28,47 +28,77 @@ enum IntConvType
 };
 
 // display int bits with tooltips
-void display_int_bits(u64* number, u8 size, IntConvType conv_type)
+void display_int_bits(char*& buffer, u64* number, u8 size, IntConvType conv_type)
 {
-	char* result;
+	u64 test;
+	u8 result;
 	switch (conv_type)
 	{
-		case IntConvType::SignMagnitude:
-			result = convert::integerToSMBinary(*number, size);
+		case SignMagnitude:
+			result = convert::SMBinaryToInteger(buffer, 64, &test);
 			break;
-		case IntConvType::OnesComplement:
-			result = convert::integerToOCBinary(*number, size);
+		case OnesComplement:
+			result = convert::OCBinaryToInteger(buffer, 64, &test);
 			break;
-		case IntConvType::TwosComplement:
-			result = convert::integerToTCBinary(*number, size);
+		case TwosComplement:
+			result = convert::TCBinaryToInteger(buffer, 64, &test);
 			break;
 	}
-	if (result == 0)
+	if (*number != test || !result )
 	{
-		ImGui::Text("--");
+		if (buffer)
+			delete[] buffer;
+		switch (conv_type)
+		{
+			case IntConvType::SignMagnitude:
+				buffer = convert::integerToSMBinary(*number, size);
+				break;
+			case IntConvType::OnesComplement:
+				buffer = convert::integerToOCBinary(*number, size);
+				break;
+			case IntConvType::TwosComplement:
+				buffer = convert::integerToTCBinary(*number, size);
+				break;
+		}
+	}
+	if (buffer == 0)
+	{
+		for (u8 i = 0; i < size; ++i)
+		{
+			ImGui::Text("-");
+			if (i + 1 < size)
+				ImGui::SameLine(0, 0);
+		}
 		return;
 	}
-
 	ImGui::BeginGroup();
 	for (u8 i = 0; i < size; i++)
 	{
-		ImGui::Text("%c", result[i]);
+		ImGui::Text("%c", buffer[i]);
 
 		// toggle bit on click
 		if (ImGui::IsItemClicked())
 		{
-			if (i == 0)
-				// special case for the sign bit: invert the number
-			 	*number = 1 + ~(*number);
-			else
-				*number ^= 1ull << (size - i - 1);
+			buffer[i] ^= 1;
+			switch (conv_type)
+			{
+				case IntConvType::SignMagnitude:
+					convert::SMBinaryToInteger(buffer, size, number);
+					break;
+				case IntConvType::OnesComplement:
+					convert::OCBinaryToInteger(buffer, size, number);
+					break;
+				case IntConvType::TwosComplement:
+					convert::TCBinaryToInteger(buffer, size, number);
+					break;
+			} 
 		}
 
 		// we need to handle tooltips ourselves because we want them to show up with no delay
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone))
 		{
 			if (i == 0)
-				ImGui::SetTooltip("Sign: %s", result[0] == '1' ? "negative" : "positive");
+				ImGui::SetTooltip("Sign: %s", buffer[0] == '1' ? "negative" : "positive");
 			else
 				ImGui::SetTooltip("%llu", 1ull << (size - i - 1));
 		}
@@ -76,7 +106,6 @@ void display_int_bits(u64* number, u8 size, IntConvType conv_type)
 		if (i < size-1)
 			ImGui::SameLine(0, 0);
 	}
-	delete[] result;
 	ImGui::EndGroup();
 }
 
@@ -135,6 +164,10 @@ int main(int, char**)
 	u64 input = 0;
 
 	u8 int_size = 8;
+
+	char *buff_sm = convert::integerToSMBinary(input, int_size), 
+		 *buff_oc = convert::integerToOCBinary(input, int_size), 
+		 *buff_tc = convert::integerToTCBinary(input, int_size);
 
 	// the width of a 0 which should be wider than a 1,
 	// this is used to check if we need the wider window size.
@@ -201,13 +234,13 @@ int main(int, char**)
 					if (int_size <  2) int_size = 2;
 
 					ImGui::Text("sign-magn");
-					display_int_bits(&input, int_size, IntConvType::SignMagnitude);
+					display_int_bits(buff_sm, &input, int_size, IntConvType::SignMagnitude);
 
 					ImGui::Text("1s' compl");
-					display_int_bits(&input, int_size, IntConvType::OnesComplement);
+					display_int_bits(buff_oc, &input, int_size, IntConvType::OnesComplement);
 
 					ImGui::Text("2's compl");
-					display_int_bits(&input, int_size, IntConvType::TwosComplement);
+					display_int_bits(buff_tc, &input, int_size, IntConvType::TwosComplement);
 
 					ImGui::EndTabItem();
 				}
