@@ -60,7 +60,7 @@ namespace convert
     // - the result is a null pointer.
     // Note:
     // - given number is not modified by this function.
-    u8 SMBinaryToInteger(char* number, u8 maximum_length, u64* result);
+    u8 SMBinaryToInteger(const char* number, u8 maximum_length, u64* result);
 
     // Convert one's completion binary represented in C string to signed integer.
     // Parameters:
@@ -78,7 +78,7 @@ namespace convert
     // - the result is a null pointer.
     // Note:
     // - given number is not modified by this function.
-    u8 OCBinaryToInteger(char* number, u8 maximum_length, u64* result);
+    u8 OCBinaryToInteger(const char* number, u8 maximum_length, u64* result);
 
     // Convert two's completion binary represented in C string to signed integer.
     // Parameters:
@@ -96,7 +96,7 @@ namespace convert
     // - the result is a null pointer.
     // Note:
     // - given number is not modified by this function.
-    u8 TCBinaryToInteger(char* number, u8 maximum_length, u64* result);
+    u8 TCBinaryToInteger(const char* number, u8 maximum_length, u64* result);
 
     // Convert float to binary in C string.
     // Parameters:
@@ -124,7 +124,7 @@ namespace convert
     // - given number has characters other than 0, '0' and '1';
     // - length of the C string is not equal to 32;
     // - the result is a null pointer.
-	u8 binaryToFloat(char* number, f32* result);
+	u8 binaryToFloat(const char* number, f32* result);
 
     // Convert binary to double.
     // Parameters:
@@ -138,6 +138,6 @@ namespace convert
     // - given number has characters other than 0, '0' and '1';
     // - length of the C string is not equal to 64;
     // - the result is a null pointer.
-	u8 binaryToDouble(char* number, f64* result);
+	u8 binaryToDouble(const char* number, f64* result);
 }
 #endif

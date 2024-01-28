@@ -73,7 +73,7 @@ namespace convert
 		return result;
 	}
 
-	u8 SMBinaryToInteger(char* number, u8 maximum_length, u64* result)
+	u8 SMBinaryToInteger(const char* number, u8 maximum_length, u64* result)
 	{
 		// Test if all parameters are correct.
 		if (!number || !result || maximum_length < 2 || maximum_length > 64)
@@ -96,7 +96,7 @@ namespace convert
 		return 1;
 	}
 
-	u8 OCBinaryToInteger(char* number, u8 maximum_length, u64* result)
+	u8 OCBinaryToInteger(const char* number, u8 maximum_length, u64* result)
 	{
 		// Test if all parameters are correct.
 		if (!number || !result || maximum_length < 2 || maximum_length > 64)
@@ -119,7 +119,7 @@ namespace convert
 		return 1;
 	}
 
-	u8 TCBinaryToInteger(char* number, u8 maximum_length, u64* result)
+	u8 TCBinaryToInteger(const char* number, u8 maximum_length, u64* result)
 	{
 		// Test if all parameters are correct.
 		if (!number || !result || maximum_length < 2 || maximum_length > 64)
@@ -205,7 +205,7 @@ namespace convert
 		return result;
 	}
 
-	u8 binaryToFloat(char *number, f32 *result)
+	u8 binaryToFloat(const char *number, f32 *result)
 	{
 		// Test C string if it is correct.
 		u8 index = -1;
@@ -229,7 +229,7 @@ namespace convert
 		return 1;
 	}
 
-	u8 binaryToDouble(char *number, f64 *result)
+	u8 binaryToDouble(const char *number, f64 *result)
 	{
 		// Test C string if it is correct.
 		u8 index = -1;
