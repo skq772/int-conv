@@ -7,7 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug",
+            "name": "Debug (Linux)",
+            "program": "${workspaceFolder}/build/int-conv",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug (Windows)",
             "program": "${workspaceFolder}/build/int-conv.exe",
             "args": [],
             "cwd": "${workspaceFolder}"
