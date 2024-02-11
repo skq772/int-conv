@@ -11,6 +11,7 @@
 #include <GLFW/glfw3.h>
 #include "stdvar.h"
 #include "convert.h"
+#include "terminusttf.h"
 
 // Constants
 const f32 doubled_font_size = 30.0f; // Real rasterized font size
@@ -544,12 +545,9 @@ int main(int argc, char** argv)
 
 	loadSettings(settings_path);
 
-	// Set Terminus font
-	ImFont* font = io.Fonts->AddFontFromFileTTF(
-		replaceFilename(*argv, "TerminusTTF-4.49.3.ttf"), 
-		doubled_font_size, 
-		NULL, 
-		default_plus_polish_glyph_ranges);
+	// Set Terminus font (from terminusttf.h)
+	ImFont* font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(
+		FONT_TERMINUS_compressed_data_base85, doubled_font_size);
 
 	// Current tab variable
 	i32 loaded_tab = selected_tab;

@@ -38,8 +38,16 @@ include_directories(
 	imgui
 	imgui/misc/cpp
 	imgui/backends
+	${PROJECT_BINARY_DIR}
 )
 
-add_executable(${PROJECT_NAME} ${CURRENT_PROJECT_SOURCES} ${IMGUI_SOURCES})
+add_executable(bin2cc imgui/misc/fonts/binary_to_compressed_c.cpp)
+add_custom_command(
+	OUTPUT ${PROJECT_BINARY_DIR}/terminusttf.h
+	DEPENDS bin2cc
+	COMMAND bin2cc -base85 ../TerminusTTF-4.49.3.ttf FONT_TERMINUS > ${PROJECT_BINARY_DIR}/terminusttf.h
+)
+
+add_executable(${PROJECT_NAME} ${CURRENT_PROJECT_SOURCES} ${PROJECT_BINARY_DIR}/terminusttf.h ${IMGUI_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC "imgui")
 target_link_libraries(${PROJECT_NAME} OpenGL::GL glfw)
