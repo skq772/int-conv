@@ -34,8 +34,9 @@ const ImWchar default_plus_polish_glyph_ranges[] =
 enum class texts
 {
 	g_sign,
-	g_positive,
-	g_negative,
+	g_plus,
+	g_minus,
+	g_bit_value,
 	integers,
 	i_decimal,
 	i_size,
@@ -71,12 +72,13 @@ enum class texts
 	about,
 	a_text
 };
-const char* c_strings[][37] = 
+const char* c_strings[][38] = 
 {
 	{
 		"Sign",
 		"plus",
 		"minus",
+		"Bit value",
 		"Integers",
 		"Decimal number",
 		"Size",
@@ -133,6 +135,7 @@ A: It converts numbers with base from 2 to 16 inclusive\n\
 		"Znak",
 		"plus",
 		"minus",
+		"Wartość bita",
 		"Integery",
 		"Liczba dziesiętna",
 		"Rozmiar",
@@ -269,7 +272,16 @@ void loadSettings(const char* path)
 // Print clickable bit chain.
 // If the chain is modified, the modified bit index is returned.
 // If length is less than 2 or greater than 64, nothing is printed.
-i8 print_bits(char*& bit_array, u8 length, bool is_color_background, u64 color_pattern, u32 color_default, u32 color_1, u32 color_2, i8 last_bit_inverted, char* (*tooltips)(u8, u8, u8))
+i8 print_bits(
+	char*& bit_array, 
+	u8 length, 
+	bool is_color_background, 
+	u64 color_pattern, 
+	u32 color_default, 
+	u32 color_1, 
+	u32 color_2, 
+	i8 last_bit_inverted, 
+	char* (*tooltips)(u8, u8, const char*))
 {
 	if (!bit_array)
 	{
@@ -300,16 +312,26 @@ i8 print_bits(char*& bit_array, u8 length, bool is_color_background, u64 color_p
 		if (is_color_background)
 		{
 			ImGui::PushStyleColor(ImGuiCol_Text, color_default);
-			draw_list->AddRectFilled(ImGui::GetCursorScreenPos(), {ImGui::CalcTextSize("0").x + ImGui::GetCursorScreenPos().x, ImGui::CalcTextSize("0").y + ImGui::GetCursorScreenPos().y}, (color_pattern_bits[i] == '0') ? color_1 : color_2);
+			draw_list->AddRectFilled(ImGui::GetCursorScreenPos(), 
+			{ImGui::CalcTextSize("0").x + ImGui::GetCursorScreenPos().x, ImGui::CalcTextSize("0").y + ImGui::GetCursorScreenPos().y}, 
+			(color_pattern_bits[i] == '0') ? color_1 : color_2);
 		}
 		else
 		{
 			ImGui::PushStyleColor(ImGuiCol_Text, (color_pattern_bits[i] == '0') ? color_1 : color_2);
-			draw_list->AddRectFilled(ImGui::GetCursorScreenPos(), {ImGui::CalcTextSize("0").x + ImGui::GetCursorScreenPos().x, ImGui::CalcTextSize("0").y + ImGui::GetCursorScreenPos().y}, color_default);
+			draw_list->AddRectFilled(
+				ImGui::GetCursorScreenPos(), 
+				{ImGui::CalcTextSize("0").x + ImGui::GetCursorScreenPos().x, ImGui::CalcTextSize("0").y + ImGui::GetCursorScreenPos().y}, 
+				color_default);
 		}
 		ImGui::Text("%c", bit_array[i]);
 		ImGui::PopStyleColor();
-		if ((ImGui::IsItemClicked() && last_bit_inverted < 0) || (last_bit_inverted > -1 && last_bit_inverted != i && (ImGui::IsMouseDown(0) || ImGui::IsMouseDown(1) || ImGui::IsMouseDown(2)) && ImGui::IsItemHovered()))
+		if (
+			(ImGui::IsItemClicked() && last_bit_inverted < 0) || 
+			(last_bit_inverted > -1 && 
+			last_bit_inverted != i && 
+			(ImGui::IsMouseDown(0) || ImGui::IsMouseDown(1) || ImGui::IsMouseDown(2)) && 
+			ImGui::IsItemHovered()))
 		{
 			result = i;
 			bit_array[i] ^= 1;
@@ -318,7 +340,7 @@ i8 print_bits(char*& bit_array, u8 length, bool is_color_background, u64 color_p
 			is_released = false;
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone) && tooltips)
 		{
-			char* tooltip = tooltips(length, i, bit_array[i]);
+			char* tooltip = tooltips(length, i, bit_array);
 			if (tooltip)
 			{
 				ImGui::SetTooltip("%s", tooltip);
@@ -342,13 +364,102 @@ i8 print_bits(char*& bit_array, u8 length, bool is_color_background, u64 color_p
 	return result;
 }
 
-char* integer_tooltips(u8 count, u8 index, u8 value)
+char* integer_tooltips(u8 count, u8 index, const char* values)
 {
-	char* buffer = new char[21];
+	char* buffer = new char[64];
 	if (!index)
-		sprintf(buffer, "Sign: %s", (value == '0') ? "positive" : "negative");
+		sprintf(
+			buffer, 
+			"%s: %s", 
+			c_strings[language!=l_english][(int)texts::g_sign], 
+			(values[index] == '0') ? c_strings[language!=l_english][(int)texts::g_plus] : c_strings[language!=l_english][(int)texts::g_minus]);
 	else
-		sprintf(buffer, "%llu", 1ull<<(count-index-1));
+		sprintf(buffer, 
+			"%s: %llu", 
+			c_strings[language!=l_english][(int)texts::g_bit_value], 
+			1ull<<(count-index-1));
+	return buffer;
+}
+
+char* float_tooltips(u8 count, u8 index, const char* values)
+{
+	if (count != 32)
+		return 0;
+	char* buffer = new char[64];
+	if (!index)
+		sprintf(
+			buffer, 
+			"%s: %s", 
+			c_strings[language!=l_english][(int)texts::g_sign], 
+			(values[index] == '0') ? c_strings[language!=l_english][(int)texts::g_plus] : c_strings[language!=l_english][(int)texts::g_minus]);
+	else if (index < 9)
+	{
+		u8 exponent = 0;
+		u8 exponent_bit_index = 9;
+		while (--exponent_bit_index)
+			if (values[exponent_bit_index] == '1')
+				exponent += 1<<(8 - exponent_bit_index);
+		exponent -= 127;
+		sprintf(
+			buffer, 
+			"%s: %i, %s: %i", 
+			c_strings[language!=l_english][(int)texts::f_exponent], 
+			(i8)exponent, 
+			c_strings[language!=l_english][(int)texts::g_bit_value], 
+			1<<(8 - index));
+	}
+	else
+	{
+		sprintf(
+			buffer, 
+			"%s:%s%f", 
+			c_strings[language!=l_english][(int)texts::g_bit_value], 
+			(1.0/(1<<(index - 8)) < 0.0000009) ? " <" : " ", 
+			(1.0/(1<<(index - 8)) < 0.0000009) ? 1.0/(1<<(index - 8)) + 0.000001 : 1.0/(1<<(index - 8)));
+	}
+	return buffer;
+}
+
+char* double_tooltips(u8 count, u8 index, const char* values)
+{
+	if (count != 64)
+		return 0;
+	char* buffer = new char[64];
+	if (!index)
+		sprintf(
+			buffer, 
+			"%s: %s", 
+			c_strings[language!=l_english][(int)texts::g_sign], 
+			(values[index] == '0') ? c_strings[language!=l_english][(int)texts::g_plus] : c_strings[language!=l_english][(int)texts::g_minus]);
+	else if (index < 11)
+	{
+		u16 exponent = 0;
+		u16 exponent_bit_index = 12;
+		while (--exponent_bit_index)
+			if (values[exponent_bit_index] == '1')
+				exponent += 1<<(11 - exponent_bit_index);
+		exponent <<= 5;
+		exponent -= 1023 << 5;
+		exponent >>= 5;
+		if (exponent & 1 << 10)
+			exponent += 0b1111100000000000;
+		sprintf(
+			buffer, 
+			"%s: %i, %s: %i", 
+			c_strings[language!=l_english][(int)texts::f_exponent], 
+			(i16)exponent, 
+			c_strings[language!=l_english][(int)texts::g_bit_value], 
+			1<<(12 - index));
+	}
+	else
+	{
+		sprintf(
+			buffer, 
+			"%s:%s%f", 
+			c_strings[language!=l_english][(int)texts::g_bit_value], 
+			(1.0/(1<<(index - 11)) < 0.0000009) ? " <" : " ", 
+			(1.0/(1<<(index - 11)) < 0.0000009) ? 1.0/(1<<(index - 11)) + 0.000001 : 1.0/(1<<(index - 11)));
+	}
 	return buffer;
 }
 
@@ -420,7 +531,11 @@ int main(int argc, char** argv)
 	loadSettings(settings_path);
 
 	// Set Terminus font
-	ImFont* font = io.Fonts->AddFontFromFileTTF(replaceFilename(*argv, "TerminusTTF-4.49.3.ttf"), doubled_font_size, NULL, default_plus_polish_glyph_ranges);
+	ImFont* font = io.Fonts->AddFontFromFileTTF(
+		replaceFilename(*argv, "TerminusTTF-4.49.3.ttf"), 
+		doubled_font_size, 
+		NULL, 
+		default_plus_polish_glyph_ranges);
 
 	// Current tab variable
 	i32 loaded_tab = selected_tab;
@@ -579,7 +694,7 @@ int main(int argc, char** argv)
 						(color_bit_sections) ? color_light_blue : color_white, 
 						(color_bit_sections) ? color_dark_blue : color_white,  
 						(multibit_invertion) ? f_f_lbi : -1, 
-						0)) != -1)
+						(show_bit_weights) ? float_tooltips : 0)) != -1)
 					{
 						f32 f;
 						convert::binaryToFloat(float_binary, &f);
@@ -597,7 +712,7 @@ int main(int argc, char** argv)
 						(color_bit_sections) ? color_light_blue : color_white, 
 						(color_bit_sections) ? color_dark_blue : color_white,  
 						(multibit_invertion) ? f_d_lbi : -1, 
-						0)) != -1)
+						(show_bit_weights) ? double_tooltips : 0)) != -1)
 					{
 						convert::binaryToDouble(double_binary, &floating_point);
 						delete float_binary; float_binary = convert::floatToBinary((f32)floating_point);
