@@ -410,9 +410,16 @@ char* float_tooltips(u8 count, u8 index, const char* values)
 	}
 	else
 	{
+		f32 normalized_mantissa = 1.0;
+		u8 mantissa_index = 8;
+		while (++mantissa_index < 32)
+			if (values[mantissa_index] == '1')
+				normalized_mantissa += 0.5/(1<<(mantissa_index - 9));
 		sprintf(
 			buffer, 
-			"%s:%s%f", 
+			"%s: %f, %s:%s%f", 
+			c_strings[language!=l_english][(int)texts::f_mantissa], 
+			normalized_mantissa, 
 			c_strings[language!=l_english][(int)texts::g_bit_value], 
 			(1.0/(1<<(index - 8)) < 0.0000009) ? " <" : " ", 
 			(1.0/(1<<(index - 8)) < 0.0000009) ? 1.0/(1<<(index - 8)) + 0.000001 : 1.0/(1<<(index - 8)));
@@ -453,9 +460,16 @@ char* double_tooltips(u8 count, u8 index, const char* values)
 	}
 	else
 	{
+		f64 normalized_mantissa = 1.0;
+		u8 mantissa_index = 11;
+		while (++mantissa_index < 64)
+			if (values[mantissa_index] == '1')
+				normalized_mantissa += 0.5/(1ull<<(mantissa_index - 12));
 		sprintf(
 			buffer, 
-			"%s:%s%f", 
+			"%s: %f, %s:%s%f", 
+			c_strings[language!=l_english][(int)texts::f_mantissa], 
+			normalized_mantissa, 
 			c_strings[language!=l_english][(int)texts::g_bit_value], 
 			(1.0/(1<<(index - 11)) < 0.0000009) ? " <" : " ", 
 			(1.0/(1<<(index - 11)) < 0.0000009) ? 1.0/(1<<(index - 11)) + 0.000001 : 1.0/(1<<(index - 11)));
