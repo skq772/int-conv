@@ -14,7 +14,7 @@
 #include "terminusttf.h"
 
 // Constants
-const f32 doubled_font_size = 30.0f; // Real rasterized font size
+const f32 doubled_font_size = 16.0f; // Real rasterized font size
 const u32 window_w = 560;
 const u32 window_h = 300;
 const u32 color_white = IM_COL32(0xFF, 0xFF, 0xFF, 0xFF);
@@ -575,6 +575,8 @@ int main(int argc, char** argv)
 	// Get ImGui default window background color
 	u32 color_default = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_WindowBg]);
 
+	bool demo_open = false;
+
 	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 #ifdef __EMSCRIPTEN__
@@ -587,8 +589,8 @@ int main(int argc, char** argv)
 		// Poll and handle events (inputs, window resize, etc.)
 		glfwPollEvents();
 
-		// Set the window size
-		glfwSetWindowSize(
+		// Set the window size, only if the demo window isn't open - we also enable resizing when that is the case
+		if (!demo_open) glfwSetWindowSize(
 			window, 
 			window_w * ((float)gui_size/20 + 1), 
 			window_h * ((float)gui_size/20 + 1));
@@ -607,7 +609,7 @@ int main(int argc, char** argv)
 			ImGui::Begin("Window", NULL, 
 				ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar);
 			ImGui::PushFont(font);
-			ImGui::SetWindowFontScale(0.5*((float)(gui_size)/20 + 1));
+			ImGui::SetWindowFontScale((float)(gui_size-1)/20 + 1);
 			if (ImGui::BeginTabBar("MainTabBar"))
 			{
 				if (ImGui::BeginTabItem(c_strings[language!=l_english][(int)texts::integers], NULL, (loaded_tab == 1) ? ImGuiTabItemFlags_SetSelected : 0))
@@ -788,6 +790,10 @@ int main(int argc, char** argv)
 					ImGui::Checkbox(c_strings[language!=l_english][(int)texts::s_show_option_help], &show_option_help);
 					if (ImGui::IsItemHovered() && show_option_help)
 						ImGui::SetTooltip("%s", c_strings[language!=l_english][(int)texts::s_show_option_help_description]);
+
+					ImGui::Checkbox("Debug: Show ImGui demo window", &demo_open); // TODO: i18n
+					glfwSetWindowAttrib(window, GLFW_RESIZABLE, demo_open);
+
 					ImGui::EndTabItem();
 				}
 				if (ImGui::BeginTabItem(c_strings[language!=l_english][(int)texts::about], NULL, (loaded_tab == 5) ? ImGuiTabItemFlags_SetSelected : 0))
@@ -800,6 +806,9 @@ int main(int argc, char** argv)
 				ImGui::PopFont();
 				ImGui::EndTabBar();
 			}
+			if (demo_open)
+            	ImGui::ShowDemoWindow(&demo_open);
+
 			ImGui::End();
 		}
 
