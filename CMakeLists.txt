@@ -5,8 +5,9 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(glfw)
-
 find_package(OpenGL REQUIRED)
+
+add_subdirectory(freetype)
 
 set(IMGUI_SOURCES
 	imgui/imgui.cpp imgui/imgui.h
@@ -25,6 +26,8 @@ set(IMGUI_SOURCES
 	imgui/backends/imgui_impl_opengl3.cpp
 	imgui/misc/cpp/imgui_stdlib.h
 	imgui/misc/cpp/imgui_stdlib.cpp
+	imgui/misc/freetype/imgui_freetype.cpp
+	imgui/misc/freetype/imgui_freetype.h
 )
 
 set(CURRENT_PROJECT_SOURCES
@@ -37,6 +40,7 @@ set(CURRENT_PROJECT_SOURCES
 include_directories(
 	imgui
 	imgui/misc/cpp
+	imgui/misc/freetype
 	imgui/backends
 	${PROJECT_BINARY_DIR}
 )
@@ -50,4 +54,5 @@ add_custom_command(
 
 add_executable(${PROJECT_NAME} ${CURRENT_PROJECT_SOURCES} ${PROJECT_BINARY_DIR}/terminusttf.h ${IMGUI_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC "imgui")
-target_link_libraries(${PROJECT_NAME} OpenGL::GL glfw)
+target_link_libraries(${PROJECT_NAME} OpenGL::GL glfw freetype)
+target_compile_definitions(${PROJECT_NAME} PUBLIC IMGUI_ENABLE_FREETYPE)

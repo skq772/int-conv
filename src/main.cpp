@@ -1,4 +1,5 @@
 #include "imgui.h"
+#include "imgui_freetype.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include <fstream>
@@ -546,8 +547,12 @@ int main(int argc, char** argv)
 	loadSettings(settings_path);
 
 	// Set Terminus font (from terminusttf.h)
+	ImFontConfig font_cfg;
+	font_cfg.FontBuilderFlags = ImGuiFreeTypeBuilderFlags_Bitmap; // this fixes everything lmao
 	ImFont* font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(
-		FONT_TERMINUS_compressed_data_base85, doubled_font_size);
+		FONT_TERMINUS_compressed_data_base85,
+		doubled_font_size,
+		&font_cfg);
 
 	// Current tab variable
 	i32 loaded_tab = selected_tab;
