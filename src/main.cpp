@@ -15,9 +15,9 @@
 #include "terminusttf.h"
 
 // Constants
-const f32 doubled_font_size = 16.0f; // Real rasterized font size
-const u32 window_w = 560;
-const u32 window_h = 300;
+const f32 font_size = 16.0f; // Real rasterized font size
+const u32 window_w = 600;
+const u32 window_h = 320;
 const u32 color_white = IM_COL32(0xFF, 0xFF, 0xFF, 0xFF);
 const u32 color_light_blue = IM_COL32(0x00, 0xAA, 0xFF, 0xFF);
 const u32 color_dark_blue = IM_COL32(0x00, 0x55, 0xFF, 0xFF);
@@ -38,10 +38,10 @@ enum class texts
 	g_sign,
 	g_plus,
 	g_minus,
+	g_size_in_bits,
 	g_bit_value,
 	integers,
 	i_decimal,
-	i_size,
 	i_sign_magnitude,
 	i_ones_completion,
 	i_twos_completion,
@@ -51,11 +51,6 @@ enum class texts
 	f_mantissa,
 	f_float,
 	f_double,
-	custom,
-	c_input_base,
-	c_input,
-	c_output_base,
-	c_output,
 	settings,
 	s_language,
 	s_language_description,
@@ -74,16 +69,16 @@ enum class texts
 	about,
 	a_text
 };
-const char* c_strings[][38] = 
+const char* c_strings[][33] = 
 {
 	{
 		"Sign",
 		"plus",
 		"minus",
+		"Size in bits",
 		"Bit value",
 		"Integers",
 		"Decimal number",
-		"Size",
 		"Sign-magnitude",
 		"One's completion",
 		"Two's completion",
@@ -93,11 +88,6 @@ const char* c_strings[][38] =
 		"Mantissa",
 		"Float",
 		"Double",
-		"Custom",
-		"Input base",
-		"Input",
-		"Output base",
-		"Output",
 		"Settings",
 		"Language",
 		"Set the interface language",
@@ -129,18 +119,19 @@ Q: How to provide input?\n\
 A: You can write a number in number inputs\n\
    and click on bits to invert those.\n\
 \n\
-Q: What custom converter do?\n\
-A: It converts numbers with base from 2 to 16 inclusive\n\
-   to another one.\n"
+Q: What multibit invertion does?\n\
+A: This option allows user to invert\n\
+   multiple bits at once with just a mouse button holded\n\
+   and cursor hovering over them."
 	},
 	{
 		"Znak",
 		"plus",
 		"minus",
+		"Rozmiar w bitach",
 		"Wartość bita",
 		"Integery",
 		"Liczba dziesiętna",
-		"Rozmiar",
 		"Znak-moduł",
 		"U1",
 		"U2",
@@ -150,11 +141,6 @@ A: It converts numbers with base from 2 to 16 inclusive\n\
 		"Mantysa",
 		"Float",
 		"Double",
-		"Dowolna",
-		"Baza wejścia",
-		"Wejście",
-		"Baza wyjścia",
-		"Wyjście",
 		"Ustawienia",
 		"Język",
 		"Ustaw język interfejsu",
@@ -186,9 +172,10 @@ P: Jak wprowadzać liczby?\n\
 O: Wpisujesz liczbę dziesiętną w pole,\n\
    a kliknięcie w odpowiedni bit odwraca jego wartość.\n\
 \n\
-P: Co robi konwerter liczb dowolnych?\n\
-O: Konwertuje liczby o bazie od 2 do 16 włącznie\n\
-   na inną.\n"
+P: Co robi opcja \"Inwersja wielobitowa\"?\n\
+O: Opcja ta umożliwia użytkownikowi na odwróceniu\n\
+   wartości wielu bitów na raz poprzez tylko przytrzymaniu\n\
+   przycisku myszy i najechaniu na nie."
 	}
 };
 
@@ -551,21 +538,21 @@ int main(int argc, char** argv)
 	font_cfg.FontBuilderFlags = ImGuiFreeTypeBuilderFlags_Bitmap; // this fixes everything lmao
 	ImFont* font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(
 		FONT_TERMINUS_compressed_data_base85,
-		doubled_font_size,
+		font_size,
 		&font_cfg);
 
 	// Current tab variable
 	i32 loaded_tab = selected_tab;
 
 	// Local variables that stores inputted numbers
-	u64 decimal = 0;
-	i32 size = 8;
-	char* sm_binary = convert::integerToSMBinary(decimal, size);
-	char* oc_binary = convert::integerToOCBinary(decimal, size);
-	char* tc_binary = convert::integerToTCBinary(decimal, size);
-	f64 floating_point = 0;
-	char* float_binary = convert::floatToBinary(floating_point);
-	char* double_binary = convert::doubleToBinary((double)floating_point);
+	u64 i_decimal = 0;
+	i32 i_size = 8;
+	char* i_sm_binary = convert::integerToSMBinary(i_decimal, i_size);
+	char* i_oc_binary = convert::integerToOCBinary(i_decimal, i_size);
+	char* i_tc_binary = convert::integerToTCBinary(i_decimal, i_size);
+	f64 f_floating_point = 0;
+	char* f_float_binary = convert::floatToBinary(f_floating_point);
+	char* f_double_binary = convert::doubleToBinary((double)f_floating_point);
 
 	// Local variables that stores last bit clicked or hovered in specified bit field
 	i8 i_sm_lbi = -1;
@@ -621,29 +608,29 @@ int main(int argc, char** argv)
 				{
 					selected_tab = 1;
 					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::i_decimal]);
-					if (ImGui::InputScalar("##decimal", ImGuiDataType_S64, &decimal))
+					if (ImGui::InputScalar("##i_decimal", ImGuiDataType_S64, &i_decimal))
 					{
-						delete sm_binary; sm_binary = convert::integerToSMBinary(decimal, size);
-						delete oc_binary; oc_binary = convert::integerToOCBinary(decimal, size);
-						delete tc_binary; tc_binary = convert::integerToTCBinary(decimal, size);
+						delete[] i_sm_binary; i_sm_binary = convert::integerToSMBinary(i_decimal, i_size);
+						delete[] i_oc_binary; i_oc_binary = convert::integerToOCBinary(i_decimal, i_size);
+						delete[] i_tc_binary; i_tc_binary = convert::integerToTCBinary(i_decimal, i_size);
 					}
 					ImGui::TextUnformatted("\n");
-					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::i_size]);
-					if (ImGui::InputInt("##size", &size))
+					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::g_size_in_bits]);
+					if (ImGui::InputInt("##i_size", &i_size))
 					{
-						if (size < 2)
-							size = 2;
-						else if (size > 64)
-							size = 64;
-						delete sm_binary; sm_binary = convert::integerToSMBinary(decimal, size);
-						delete oc_binary; oc_binary = convert::integerToOCBinary(decimal, size);
-						delete tc_binary; tc_binary = convert::integerToTCBinary(decimal, size);
+						if (i_size < 2)
+							i_size = 2;
+						else if (i_size > 64)
+							i_size = 64;
+						delete[] i_sm_binary; i_sm_binary = convert::integerToSMBinary(i_decimal, i_size);
+						delete[] i_oc_binary; i_oc_binary = convert::integerToOCBinary(i_decimal, i_size);
+						delete[] i_tc_binary; i_tc_binary = convert::integerToTCBinary(i_decimal, i_size);
 					}
 					ImGui::TextUnformatted("\n");
 					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::i_sign_magnitude]);
 					if ((i_sm_lbi = print_bits(
-						sm_binary, 
-						size, 
+						i_sm_binary, 
+						i_size, 
 						color_bit_sections && invert_color, 
 						1ull<<63, 
 						((color_bit_sections && invert_color) || !(color_bit_sections && invert_color)) ? color_default : color_white, 
@@ -652,15 +639,15 @@ int main(int argc, char** argv)
 						(multibit_invertion) ? i_sm_lbi : -1, 
 						(show_bit_weights) ? integer_tooltips : 0)) != -1)
 					{
-						convert::SMBinaryToInteger(sm_binary, 64, &decimal);
-						delete oc_binary; oc_binary = convert::integerToOCBinary(decimal, size);
-						delete tc_binary; tc_binary = convert::integerToTCBinary(decimal, size);
+						convert::SMBinaryToInteger(i_sm_binary, 64, &i_decimal);
+						delete[] i_oc_binary; i_oc_binary = convert::integerToOCBinary(i_decimal, i_size);
+						delete[] i_tc_binary; i_tc_binary = convert::integerToTCBinary(i_decimal, i_size);
 					}
 					ImGui::TextUnformatted("\n");
 					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::i_ones_completion]);
 					if ((i_oc_lbi = print_bits(
-						oc_binary, 
-						size, 
+						i_oc_binary, 
+						i_size, 
 						color_bit_sections && invert_color, 
 						1ull<<63, 
 						((color_bit_sections && invert_color) || !(color_bit_sections && invert_color)) ? color_default : color_white, 
@@ -669,15 +656,15 @@ int main(int argc, char** argv)
 						(multibit_invertion) ? i_oc_lbi : -1, 
 						(show_bit_weights) ? integer_tooltips : 0)) != -1)
 					{
-						convert::OCBinaryToInteger(oc_binary, 64, &decimal);
-						delete sm_binary; sm_binary = convert::integerToSMBinary(decimal, size);
-						delete tc_binary; tc_binary = convert::integerToTCBinary(decimal, size);
+						convert::OCBinaryToInteger(i_oc_binary, 64, &i_decimal);
+						delete[] i_sm_binary; i_sm_binary = convert::integerToSMBinary(i_decimal, i_size);
+						delete[] i_tc_binary; i_tc_binary = convert::integerToTCBinary(i_decimal, i_size);
 					}
 					ImGui::TextUnformatted("\n");
 					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::i_twos_completion]);
 					if ((i_tc_lbi = print_bits(
-						tc_binary, 
-						size, 
+						i_tc_binary, 
+						i_size, 
 						color_bit_sections && invert_color, 
 						1ull<<63, 
 						((color_bit_sections && invert_color) || !(color_bit_sections && invert_color)) ? color_default : color_white, 
@@ -686,9 +673,9 @@ int main(int argc, char** argv)
 						(multibit_invertion) ? i_tc_lbi : -1, 
 						(show_bit_weights) ? integer_tooltips : 0)) != -1)
 					{
-						convert::TCBinaryToInteger(tc_binary, 64, &decimal);
-						delete sm_binary; sm_binary = convert::integerToSMBinary(decimal, size);
-						delete oc_binary; oc_binary = convert::integerToOCBinary(decimal, size);
+						convert::TCBinaryToInteger(i_tc_binary, 64, &i_decimal);
+						delete[] i_sm_binary; i_sm_binary = convert::integerToSMBinary(i_decimal, i_size);
+						delete[] i_oc_binary; i_oc_binary = convert::integerToOCBinary(i_decimal, i_size);
 					}
 					ImGui::EndTabItem();
 				}
@@ -696,16 +683,16 @@ int main(int argc, char** argv)
 				{
 					selected_tab = 2;
 					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::f_floating_point]);
-					ImGui::SetNextItemWidth(18*doubled_font_size*((float)gui_size/20 + 1));
-					if (ImGui::InputScalar("##floating_point", ImGuiDataType_Double, &floating_point))
+					ImGui::SetNextItemWidth(18*font_size*((float)gui_size/20 + 1));
+					if (ImGui::InputScalar("##f_floating_point", ImGuiDataType_Double, &f_floating_point))
 					{
-						delete float_binary; float_binary = convert::floatToBinary((f32)floating_point);
-						delete double_binary; double_binary = convert::doubleToBinary(floating_point);
+						delete[] f_float_binary; f_float_binary = convert::floatToBinary((f32)f_floating_point);
+						delete[] f_double_binary; f_double_binary = convert::doubleToBinary(f_floating_point);
 					}
 					ImGui::TextUnformatted("\n");
 					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::f_float]);
 					if ((f_f_lbi = print_bits(
-						float_binary, 
+						f_float_binary, 
 						32, 
 						color_bit_sections && invert_color, 
 						0x807FFFFFFFFFFFFF, 
@@ -716,16 +703,16 @@ int main(int argc, char** argv)
 						(show_bit_weights) ? float_tooltips : 0)) != -1)
 					{
 						f32 f;
-						convert::binaryToFloat(float_binary, &f);
-						floating_point = (double)f;
-						delete double_binary; double_binary = convert::doubleToBinary(floating_point);
+						convert::binaryToFloat(f_float_binary, &f);
+						f_floating_point = (double)f;
+						delete[] f_double_binary; f_double_binary = convert::doubleToBinary(f_floating_point);
 					}
 					ImGui::TextUnformatted("\n");
 					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::f_double]);
 					if ((f_d_lbi = print_bits(
-						double_binary, 
+						f_double_binary, 
 						64, 
-						color_bit_sections && invert_color,  
+						color_bit_sections && invert_color, 
 						0x800FFFFFFFFFFFFF, 
 						((color_bit_sections && invert_color) || !(color_bit_sections && invert_color)) ? color_default : color_white, 
 						(color_bit_sections) ? color_light_blue : color_white, 
@@ -733,14 +720,9 @@ int main(int argc, char** argv)
 						(multibit_invertion) ? f_d_lbi : -1, 
 						(show_bit_weights) ? double_tooltips : 0)) != -1)
 					{
-						convert::binaryToDouble(double_binary, &floating_point);
-						delete float_binary; float_binary = convert::floatToBinary((f32)floating_point);
+						convert::binaryToDouble(f_double_binary, &f_floating_point);
+						delete[] f_float_binary; f_float_binary = convert::floatToBinary((f32)f_floating_point);
 					}
-					ImGui::EndTabItem();
-				}
-				if (ImGui::BeginTabItem(c_strings[language!=l_english][(int)texts::custom], NULL, (loaded_tab == 3) ? ImGuiTabItemFlags_SetSelected : 0))
-				{
-					selected_tab = 3;
 					ImGui::EndTabItem();
 				}
 				if (ImGui::BeginTabItem(c_strings[language!=l_english][(int)texts::settings], NULL, (loaded_tab == 4) ? ImGuiTabItemFlags_SetSelected : 0))
@@ -769,7 +751,7 @@ int main(int argc, char** argv)
 					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::s_gui_size]);
 					if (ImGui::IsItemHovered() && show_option_help)
 						ImGui::SetTooltip("%s", c_strings[language!=l_english][(int)texts::s_gui_size_description]);
-					ImGui::SetNextItemWidth(doubled_font_size*6+3*((float)gui_size/20 + 1));
+					ImGui::SetNextItemWidth(font_size*6+3*((float)gui_size/20 + 1));
 					if (ImGui::InputInt("##gui_size", &gui_size, 1))
 					{
 						if (gui_size < 1)
