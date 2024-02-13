@@ -539,7 +539,8 @@ int main(int argc, char** argv)
 	ImFont* font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(
 		FONT_TERMINUS_compressed_data_base85,
 		font_size,
-		&font_cfg);
+		&font_cfg,
+		default_plus_polish_glyph_ranges);
 
 	// Current tab variable
 	i32 loaded_tab = selected_tab;
