@@ -11,6 +11,7 @@
 #endif
 #include <GLFW/glfw3.h>
 #include "stdvar.h"
+#include "i18n/i18n.cpp" // ??? doesn't work with .h
 #include "convert.h"
 #include "terminusttf.h"
 
@@ -21,10 +22,8 @@ const u32 window_h = 320;
 const u32 color_white = IM_COL32(0xFF, 0xFF, 0xFF, 0xFF);
 const u32 color_light_blue = IM_COL32(0x00, 0xAA, 0xFF, 0xFF);
 const u32 color_dark_blue = IM_COL32(0x00, 0x55, 0xFF, 0xFF);
-const char* l_english = "English";
-const char* l_polish = "Polski";
-const ImWchar default_plus_polish_glyph_ranges[] = 
-{
+
+const ImWchar default_plus_polish_glyph_ranges[] = {
 	0x0020, 0x00FF,
 	0x0104, 0x0107,
 	0x0118, 0x0119,
@@ -33,154 +32,15 @@ const ImWchar default_plus_polish_glyph_ranges[] =
 	0x0179, 0x017C,
 	0
 };
-enum class texts
-{
-	g_sign,
-	g_plus,
-	g_minus,
-	g_size_in_bits,
-	g_bit_value,
-	integers,
-	i_decimal,
-	i_sign_magnitude,
-	i_ones_completion,
-	i_twos_completion,
-	floats,
-	f_floating_point,
-	f_exponent,
-	f_mantissa,
-	f_float,
-	f_double,
-	settings,
-	s_language,
-	s_language_description,
-	s_gui_size,
-	s_gui_size_description,
-	s_multibit_invertion,
-	s_multibit_invertion_description,
-	s_show_bit_weights,
-	s_show_bit_weights_description,
-	s_color_bit_sections,
-	s_color_bit_sections_description,
-	s_invert_color,
-	s_invert_color_description,
-	s_show_option_help,
-	s_show_option_help_description,
-	about,
-	a_text
-};
-const char* c_strings[][33] = 
-{
-	{
-		"Sign",
-		"plus",
-		"minus",
-		"Size in bits",
-		"Bit value",
-		"Integers",
-		"Decimal number",
-		"Sign-magnitude",
-		"One's completion",
-		"Two's completion",
-		"Floats",
-		"Floating-point number",
-		"Exponent",
-		"Mantissa",
-		"Float",
-		"Double",
-		"Settings",
-		"Language",
-		"Set the interface language",
-		"GUI scale",
-		"Set the entire GUI scale",
-		"Multibit invertion",
-		"Invert many bits at once",
-		"Show bit weights",
-		"Show as tooltips weigths of bits",
-		"Color bit sections",
-		"Show bit field sections using color",
-		"Invert color",
-		"Color background of bit fields",
-		"Show option help",
-		"Show tooltip after hovering on a setting",
-		"About",
-		"\
-Hello there!\n\
-You can find simple answers of simple questions here.\n\
-\n\
-Q: What's even this?!\n\
-A: This is a simple number converter.\n\
-\n\
-Q: What types of convertion can I do here?\n\
-A: It does custom, decimal/floating-point to binary\n\
-   and vice versa convertions.\n\
-\n\
-Q: How to provide input?\n\
-A: You can write a number in number inputs\n\
-   and click on bits to invert those.\n\
-\n\
-Q: What multibit invertion does?\n\
-A: This option allows user to invert\n\
-   multiple bits at once with just a mouse button holded\n\
-   and cursor hovering over them."
-	},
-	{
-		"Znak",
-		"plus",
-		"minus",
-		"Rozmiar w bitach",
-		"Wartość bita",
-		"Integery",
-		"Liczba dziesiętna",
-		"Znak-moduł",
-		"U1",
-		"U2",
-		"Zmiennoprzecinkowe",
-		"Liczba zmiennoprzecinkowa",
-		"Wykładnik",
-		"Mantysa",
-		"Float",
-		"Double",
-		"Ustawienia",
-		"Język",
-		"Ustaw język interfejsu",
-		"Skala GUI",
-		"Ustaw skalę całego okna",
-		"Inwersja wielobitowa",
-		"Inwertuj wiele bitów naraz",
-		"Pokazuj wagi bitów",
-		"Wyświetlaj w dymkach wagi poszczególnych bitów",
-		"Koloruj sekcje bitów",
-		"Pokaż sekcje pól bitowych za pomocą koloru",
-		"Odwróć kolor",
-		"Koloruj tło bitów",
-		"Pokaż podpowiedź do opcji",
-		"Pokaż dymek z opisem po najechaniu na opcję",
-		"O programie",
-		"\
-Witaj!\n\
-Znajdziesz tu proste odpowiedzi na proste pytania.\n\
-\n\
-P: Co to niby ma być?!\n\
-O: To jest prosty konwerter do liczb.\n\
-\n\
-P: Co to umie zrobić?\n\
-O: Potrafi przekonwertować liczby dowolne,\n\
-   dziesiętne/zmiennoprzecinkowe na binarny i na odwrót.\n\
-\n\
-P: Jak wprowadzać liczby?\n\
-O: Wpisujesz liczbę dziesiętną w pole,\n\
-   a kliknięcie w odpowiedni bit odwraca jego wartość.\n\
-\n\
-P: Co robi opcja \"Inwersja wielobitowa\"?\n\
-O: Opcja ta umożliwia użytkownikowi na odwróceniu\n\
-   wartości wielu bitów na raz poprzez tylko przytrzymaniu\n\
-   przycisku myszy i najechaniu na nie."
-	}
-};
+
+// global translator object
+I18n::Translator translator;
+// shorthand
+#define _(t) translator.get_str(t)
+// so we can do just id::whatever
+using I18n::id;
 
 // Settings
-const char* language = l_english;			// Language setting
 i32 gui_size = 1;							// Size of the entire GUI
 bool multibit_invertion = false;			// Invert multiple bits with one click and mouse movement
 bool show_bit_weights = true;				// Show the tooltips
@@ -218,11 +78,11 @@ void saveSettings(const char* path)
 	if (!f)
 		return;
 	fprintf(f, "%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n", 
-		language == l_english, 
-		gui_size, 
-		multibit_invertion, 
-		show_bit_weights,  
-		color_bit_sections, 
+		(u16)translator.lang,
+		gui_size,
+		multibit_invertion,
+		show_bit_weights,
+		color_bit_sections,
 		invert_color,
 		show_option_help,
 		selected_tab);
@@ -233,12 +93,12 @@ void saveSettings(const char* path)
 // If path is a null pointer or the file doesn't exist or has incorrect values, default settings are loaded.
 void loadSettings(const char* path)
 {
-	i32 temp = 1;
+	u16 tmp_lang = 1;
 	std::fstream f(path);
 	if(f.is_open())
 	{
 		f
-		>>temp
+		>>tmp_lang
 		>>gui_size
 		>>multibit_invertion
 		>>show_bit_weights
@@ -248,10 +108,8 @@ void loadSettings(const char* path)
 		>>selected_tab;
 		f.close();
 	}
-	if (temp)
-		language = l_english;
-	else
-		language = l_polish;
+	if (tmp_lang <= 2)
+		translator.lang = (I18n::lang_id)tmp_lang;
 	if (gui_size < 1 || gui_size > 20)
 		gui_size = 1;
 	if (selected_tab < 1 || selected_tab > 5)
@@ -360,12 +218,12 @@ char* integer_tooltips(u8 count, u8 index, const char* values)
 		sprintf(
 			buffer, 
 			"%s: %s", 
-			c_strings[language!=l_english][(int)texts::g_sign], 
-			(values[index] == '0') ? c_strings[language!=l_english][(int)texts::g_plus] : c_strings[language!=l_english][(int)texts::g_minus]);
+			_(id::g_sign), 
+			(values[index] == '0') ? _(id::g_plus) : _(id::g_minus));
 	else
 		sprintf(buffer, 
 			"%s: %llu", 
-			c_strings[language!=l_english][(int)texts::g_bit_value], 
+			_(id::g_bit_value), 
 			1ull<<(count-index-1));
 	return buffer;
 }
@@ -379,8 +237,8 @@ char* float_tooltips(u8 count, u8 index, const char* values)
 		sprintf(
 			buffer, 
 			"%s: %s", 
-			c_strings[language!=l_english][(int)texts::g_sign], 
-			(values[index] == '0') ? c_strings[language!=l_english][(int)texts::g_plus] : c_strings[language!=l_english][(int)texts::g_minus]);
+			_(id::g_sign), 
+			(values[index] == '0') ? _(id::g_plus) : _(id::g_minus));
 	else if (index < 9)
 	{
 		u8 exponent = 0;
@@ -392,9 +250,9 @@ char* float_tooltips(u8 count, u8 index, const char* values)
 		sprintf(
 			buffer, 
 			"%s: %i, %s: %i", 
-			c_strings[language!=l_english][(int)texts::f_exponent], 
+			_(id::f_exponent), 
 			(i8)exponent, 
-			c_strings[language!=l_english][(int)texts::g_bit_value], 
+			_(id::g_bit_value), 
 			1<<(8 - index));
 	}
 	else
@@ -407,9 +265,9 @@ char* float_tooltips(u8 count, u8 index, const char* values)
 		sprintf(
 			buffer, 
 			"%s: %f, %s:%s%f", 
-			c_strings[language!=l_english][(int)texts::f_mantissa], 
+			_(id::f_mantissa), 
 			normalized_mantissa, 
-			c_strings[language!=l_english][(int)texts::g_bit_value], 
+			_(id::g_bit_value), 
 			(1.0/(1<<(index - 8)) < 0.0000009) ? " <" : " ", 
 			(1.0/(1<<(index - 8)) < 0.0000009) ? 1.0/(1<<(index - 8)) + 0.000001 : 1.0/(1<<(index - 8)));
 	}
@@ -425,8 +283,8 @@ char* double_tooltips(u8 count, u8 index, const char* values)
 		sprintf(
 			buffer, 
 			"%s: %s", 
-			c_strings[language!=l_english][(int)texts::g_sign], 
-			(values[index] == '0') ? c_strings[language!=l_english][(int)texts::g_plus] : c_strings[language!=l_english][(int)texts::g_minus]);
+			_(id::g_sign), 
+			(values[index] == '0') ? _(id::g_plus) : _(id::g_minus));
 	else if (index < 11)
 	{
 		u16 exponent = 0;
@@ -442,9 +300,9 @@ char* double_tooltips(u8 count, u8 index, const char* values)
 		sprintf(
 			buffer, 
 			"%s: %i, %s: %i", 
-			c_strings[language!=l_english][(int)texts::f_exponent], 
+			_(id::f_exponent), 
 			(i16)exponent, 
-			c_strings[language!=l_english][(int)texts::g_bit_value], 
+			_(id::g_bit_value), 
 			1<<(12 - index));
 	}
 	else
@@ -457,9 +315,9 @@ char* double_tooltips(u8 count, u8 index, const char* values)
 		sprintf(
 			buffer, 
 			"%s: %f, %s:%s%f", 
-			c_strings[language!=l_english][(int)texts::f_mantissa], 
+			_(id::f_mantissa), 
 			normalized_mantissa, 
-			c_strings[language!=l_english][(int)texts::g_bit_value], 
+			_(id::g_bit_value), 
 			(1.0/(1<<(index - 11)) < 0.0000009) ? " <" : " ", 
 			(1.0/(1<<(index - 11)) < 0.0000009) ? 1.0/(1<<(index - 11)) + 0.000001 : 1.0/(1<<(index - 11)));
 	}
@@ -520,7 +378,7 @@ int main(int argc, char** argv)
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
 	// Settings change flag
 	bool is_setting_changed = true;
@@ -536,11 +394,12 @@ int main(int argc, char** argv)
 	// Set Terminus font (from terminusttf.h)
 	ImFontConfig font_cfg;
 	font_cfg.FontBuilderFlags = ImGuiFreeTypeBuilderFlags_Bitmap; // this fixes everything lmao
-	ImFont* font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(
+	ImFont* font_terminus = io.Fonts->AddFontFromMemoryCompressedBase85TTF(
 		FONT_TERMINUS_compressed_data_base85,
 		font_size,
 		&font_cfg,
 		default_plus_polish_glyph_ranges);
+	io.FontDefault = font_terminus;
 
 	// Current tab variable
 	i32 loaded_tab = selected_tab;
@@ -599,16 +458,16 @@ int main(int argc, char** argv)
 		ImGui::SetNextWindowSize(viewport->WorkSize);
 
 		{
-			ImGui::Begin("Window", NULL, 
+			ImGui::Begin("Main Window", NULL, 
 				ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar);
-			ImGui::PushFont(font);
+			
 			ImGui::SetWindowFontScale((float)(gui_size-1)/20 + 1);
 			if (ImGui::BeginTabBar("MainTabBar"))
 			{
-				if (ImGui::BeginTabItem(c_strings[language!=l_english][(int)texts::integers], NULL, (loaded_tab == 1) ? ImGuiTabItemFlags_SetSelected : 0))
+				if (ImGui::BeginTabItem(_(id::integers), NULL, (loaded_tab == 1) ? ImGuiTabItemFlags_SetSelected : 0))
 				{
 					selected_tab = 1;
-					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::i_decimal]);
+					ImGui::TextUnformatted(_(id::i_decimal));
 					if (ImGui::InputScalar("##i_decimal", ImGuiDataType_S64, &i_decimal))
 					{
 						delete[] i_sm_binary; i_sm_binary = convert::integerToSMBinary(i_decimal, i_size);
@@ -616,7 +475,7 @@ int main(int argc, char** argv)
 						delete[] i_tc_binary; i_tc_binary = convert::integerToTCBinary(i_decimal, i_size);
 					}
 					ImGui::TextUnformatted("\n");
-					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::g_size_in_bits]);
+					ImGui::TextUnformatted(_(id::g_size_in_bits));
 					if (ImGui::InputInt("##i_size", &i_size))
 					{
 						if (i_size < 2)
@@ -628,7 +487,7 @@ int main(int argc, char** argv)
 						delete[] i_tc_binary; i_tc_binary = convert::integerToTCBinary(i_decimal, i_size);
 					}
 					ImGui::TextUnformatted("\n");
-					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::i_sign_magnitude]);
+					ImGui::TextUnformatted(_(id::i_sign_magnitude));
 					if ((i_sm_lbi = print_bits(
 						i_sm_binary, 
 						i_size, 
@@ -645,7 +504,7 @@ int main(int argc, char** argv)
 						delete[] i_tc_binary; i_tc_binary = convert::integerToTCBinary(i_decimal, i_size);
 					}
 					ImGui::TextUnformatted("\n");
-					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::i_ones_completion]);
+					ImGui::TextUnformatted(_(id::i_ones_completion));
 					if ((i_oc_lbi = print_bits(
 						i_oc_binary, 
 						i_size, 
@@ -662,7 +521,7 @@ int main(int argc, char** argv)
 						delete[] i_tc_binary; i_tc_binary = convert::integerToTCBinary(i_decimal, i_size);
 					}
 					ImGui::TextUnformatted("\n");
-					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::i_twos_completion]);
+					ImGui::TextUnformatted(_(id::i_twos_completion));
 					if ((i_tc_lbi = print_bits(
 						i_tc_binary, 
 						i_size, 
@@ -680,10 +539,10 @@ int main(int argc, char** argv)
 					}
 					ImGui::EndTabItem();
 				}
-				if (ImGui::BeginTabItem(c_strings[language!=l_english][(int)texts::floats], NULL, (loaded_tab == 2) ? ImGuiTabItemFlags_SetSelected : 0))
+				if (ImGui::BeginTabItem(_(id::floats), NULL, (loaded_tab == 2) ? ImGuiTabItemFlags_SetSelected : 0))
 				{
 					selected_tab = 2;
-					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::f_floating_point]);
+					ImGui::TextUnformatted(_(id::f_floating_point));
 					ImGui::SetNextItemWidth(18*font_size*((float)gui_size/20 + 1));
 					if (ImGui::InputScalar("##f_floating_point", ImGuiDataType_Double, &f_floating_point))
 					{
@@ -691,7 +550,7 @@ int main(int argc, char** argv)
 						delete[] f_double_binary; f_double_binary = convert::doubleToBinary(f_floating_point);
 					}
 					ImGui::TextUnformatted("\n");
-					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::f_float]);
+					ImGui::TextUnformatted(_(id::f_float));
 					if ((f_f_lbi = print_bits(
 						f_float_binary, 
 						32, 
@@ -709,7 +568,7 @@ int main(int argc, char** argv)
 						delete[] f_double_binary; f_double_binary = convert::doubleToBinary(f_floating_point);
 					}
 					ImGui::TextUnformatted("\n");
-					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::f_double]);
+					ImGui::TextUnformatted(_(id::f_double));
 					if ((f_d_lbi = print_bits(
 						f_double_binary, 
 						64, 
@@ -726,32 +585,30 @@ int main(int argc, char** argv)
 					}
 					ImGui::EndTabItem();
 				}
-				if (ImGui::BeginTabItem(c_strings[language!=l_english][(int)texts::settings], NULL, (loaded_tab == 4) ? ImGuiTabItemFlags_SetSelected : 0))
+				if (ImGui::BeginTabItem(_(id::settings), NULL, (loaded_tab == 4) ? ImGuiTabItemFlags_SetSelected : 0))
 				{
 					selected_tab = 4;
-					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::s_language]);
+					ImGui::TextUnformatted(_(id::s_language));
 					if (ImGui::IsItemHovered() && show_option_help)
-						ImGui::SetTooltip("%s", c_strings[language!=l_english][(int)texts::s_language_description]);
-					if (ImGui::BeginCombo("##language", language))
+						ImGui::SetTooltip("%s", _(id::s_language_description));
+					if (ImGui::BeginCombo("##language", _(id::lang_name)))
 					{
-						if (ImGui::Selectable(l_english, language == l_english))
+						for (u16 i = 0; i < I18n::lang_count; i++)
 						{
-							language = l_english;
-							loaded_tab = 4;
-							force_select_tab = true;
-						}
-						if (ImGui::Selectable(l_polish, language == l_polish))
-						{
-							language = l_polish;
-							loaded_tab = 4;
-							force_select_tab = true;
+							I18n::lang_id cur_lang = (I18n::lang_id)i;
+							if (ImGui::Selectable(I18n::get_str(cur_lang, id::lang_name), translator.lang == cur_lang))
+							{
+								translator.lang = cur_lang;
+								loaded_tab = 4;
+								force_select_tab = true;
+							}
 						}
 						ImGui::EndCombo();
 					}
 					ImGui::TextUnformatted("\n");
-					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::s_gui_size]);
+					ImGui::TextUnformatted(_(id::s_gui_size));
 					if (ImGui::IsItemHovered() && show_option_help)
-						ImGui::SetTooltip("%s", c_strings[language!=l_english][(int)texts::s_gui_size_description]);
+						ImGui::SetTooltip("%s", _(id::s_gui_size_description));
 					ImGui::SetNextItemWidth(font_size*6+3*((float)gui_size/20 + 1));
 					if (ImGui::InputInt("##gui_size", &gui_size, 1))
 					{
@@ -761,37 +618,37 @@ int main(int argc, char** argv)
 							gui_size = 20;
 					}
 					ImGui::TextUnformatted("\n");
-					ImGui::Checkbox(c_strings[language!=l_english][(int)texts::s_multibit_invertion], &multibit_invertion);
+					ImGui::Checkbox(_(id::s_multibit_invertion), &multibit_invertion);
 					if (ImGui::IsItemHovered() && show_option_help)
-						ImGui::SetTooltip("%s", c_strings[language!=l_english][(int)texts::s_multibit_invertion_description]);
-					ImGui::Checkbox(c_strings[language!=l_english][(int)texts::s_show_bit_weights], &show_bit_weights);
+						ImGui::SetTooltip("%s", _(id::s_multibit_invertion_description));
+					ImGui::Checkbox(_(id::s_show_bit_weights), &show_bit_weights);
 					if (ImGui::IsItemHovered() && show_option_help)
-						ImGui::SetTooltip("%s", c_strings[language!=l_english][(int)texts::s_show_bit_weights_description]);
-					ImGui::Checkbox(c_strings[language!=l_english][(int)texts::s_color_bit_sections], &color_bit_sections);
+						ImGui::SetTooltip("%s", _(id::s_show_bit_weights_description));
+					ImGui::Checkbox(_(id::s_color_bit_sections), &color_bit_sections);
 					if (ImGui::IsItemHovered() && show_option_help)
-						ImGui::SetTooltip("%s", c_strings[language!=l_english][(int)texts::s_color_bit_sections_description]);
+						ImGui::SetTooltip("%s", _(id::s_color_bit_sections_description));
 					ImGui::BeginDisabled(!color_bit_sections);
-					ImGui::Checkbox(c_strings[language!=l_english][(int)texts::s_invert_color], &invert_color);
+					ImGui::Checkbox(_(id::s_invert_color), &invert_color);
 					if (ImGui::IsItemHovered() && show_option_help)
-						ImGui::SetTooltip("%s", c_strings[language!=l_english][(int)texts::s_invert_color_description]);
+						ImGui::SetTooltip("%s", _(id::s_invert_color_description));
 					ImGui::EndDisabled();
-					ImGui::Checkbox(c_strings[language!=l_english][(int)texts::s_show_option_help], &show_option_help);
+					ImGui::Checkbox(_(id::s_show_option_help), &show_option_help);
 					if (ImGui::IsItemHovered() && show_option_help)
-						ImGui::SetTooltip("%s", c_strings[language!=l_english][(int)texts::s_show_option_help_description]);
+						ImGui::SetTooltip("%s", _(id::s_show_option_help_description));
 
 					ImGui::Checkbox("Debug: Show ImGui demo window", &demo_open); // TODO: i18n
 					glfwSetWindowAttrib(window, GLFW_RESIZABLE, demo_open);
 
 					ImGui::EndTabItem();
 				}
-				if (ImGui::BeginTabItem(c_strings[language!=l_english][(int)texts::about], NULL, (loaded_tab == 5) ? ImGuiTabItemFlags_SetSelected : 0))
+				if (ImGui::BeginTabItem(_(id::about), NULL, (loaded_tab == 5) ? ImGuiTabItemFlags_SetSelected : 0))
 				{
 					loaded_tab = 0;
 					selected_tab = 5;
-					ImGui::TextUnformatted(c_strings[language!=l_english][(int)texts::a_text]);
+					ImGui::TextUnformatted(_(id::a_text));
 					ImGui::EndTabItem();
 				}
-				ImGui::PopFont();
+
 				ImGui::EndTabBar();
 			}
 			if (demo_open)
