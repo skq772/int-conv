@@ -329,16 +329,14 @@ int main(int argc, char** argv)
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-	// Settings change flag
-	bool is_setting_changed = true;
-
 	// Force set selected tab
 	bool force_select_tab = false;
 
 	// Path to file with saved settings
 	const char* settings_path = replaceFilename(*argv, "int-conv.settings");
-
 	settings.load(settings_path);
+
+	i32 tmp_gui_size = settings.gui_size;
 
 	// Set Terminus font (from terminusttf.h)
 	ImFontConfig font_cfg;
@@ -558,13 +556,19 @@ int main(int argc, char** argv)
 					ImGui::TextUnformatted(_(id::s_gui_size));
 					if (ImGui::IsItemHovered() && settings.show_option_help)
 						ImGui::SetTooltip("%s", _(id::s_gui_size_description));
-					ImGui::SetNextItemWidth(font_size*6+3*((float)settings.gui_size/20 + 1));
-					if (ImGui::InputInt("##gui_size", &settings.gui_size, 1))
+					//ImGui::SetNextItemWidth(font_size*6+3*((float)settings.gui_size/20 + 1));
+					//if (ImGui::InputInt("##gui_size", &tmp_gui_size, 1))
+					if (ImGui::SliderInt("##gui_size", &tmp_gui_size, 1, 20))
 					{
-						if (settings.gui_size < 1)
-							settings.gui_size = 1;
-						else if (settings.gui_size > 20)
-							settings.gui_size = 20;
+						if (tmp_gui_size < 1)
+							tmp_gui_size = 1;
+						else if (tmp_gui_size > 20)
+							tmp_gui_size = 20;
+					}
+					// set the scale only after the mouse has been released
+					if (!ImGui::IsMouseDown(0))
+					{
+						settings.gui_size = tmp_gui_size;
 					}
 					ImGui::TextUnformatted("\n");
 					ImGui::Checkbox(_(id::s_multibit_invertion), &settings.multibit_inversion);
