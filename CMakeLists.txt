@@ -52,7 +52,7 @@ add_custom_command(
 	COMMAND bin2cc -base85 ../TerminusTTF-4.49.3.ttf FONT_TERMINUS > ${PROJECT_BINARY_DIR}/terminusttf.h
 )
 
-add_executable(${PROJECT_NAME} ${CURRENT_PROJECT_SOURCES} ${PROJECT_BINARY_DIR}/terminusttf.h ${IMGUI_SOURCES})
+add_executable(${PROJECT_NAME} WIN32 ${CURRENT_PROJECT_SOURCES} ${PROJECT_BINARY_DIR}/terminusttf.h ${IMGUI_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC "imgui")
-target_link_libraries(${PROJECT_NAME} OpenGL::GL glfw freetype)
+target_link_libraries(${PROJECT_NAME} -static OpenGL::GL glfw freetype)
 target_compile_definitions(${PROJECT_NAME} PUBLIC IMGUI_ENABLE_FREETYPE)

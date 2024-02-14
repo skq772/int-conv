@@ -19,7 +19,7 @@
 // Constants
 const f32 font_size = 16.0f; // Real rasterized font size
 const u32 window_w = 600;
-const u32 window_h = 320;
+const u32 window_h = 350;
 const u32 color_white = IM_COL32(0xFF, 0xFF, 0xFF, 0xFF);
 const u32 color_light_blue = IM_COL32(0x00, 0xAA, 0xFF, 0xFF);
 const u32 color_dark_blue = IM_COL32(0x00, 0x55, 0xFF, 0xFF);
@@ -313,10 +313,10 @@ int main(int argc, char** argv)
 
 	// Create window with graphics context
 	GLFWwindow* window = glfwCreateWindow(
-		window_w * ((float)settings.gui_size/20 + 1), 
-		window_h * ((float)settings.gui_size/20 + 1), 
-		"int-conv", 
-		nullptr, 
+		window_w * ((float)settings.gui_size/20 + 1),
+		window_h * ((float)settings.gui_size/20 + 1),
+		"int-conv",
+		nullptr,
 		nullptr);
 	if (window == nullptr)
 		return 1;
@@ -328,6 +328,9 @@ int main(int argc, char** argv)
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+	// disable saving imgui settings entirely
+	io.IniFilename = NULL;
 
 	// Force set selected tab
 	bool force_select_tab = false;
