@@ -318,8 +318,8 @@ char* double_tooltips(u8 count, u8 index, const char* values)
 			_(id::f_mantissa), 
 			normalized_mantissa, 
 			_(id::g_bit_value), 
-			(1.0/(1<<(index - 11)) < 0.0000009) ? " <" : " ", 
-			(1.0/(1<<(index - 11)) < 0.0000009) ? 1.0/(1<<(index - 11)) + 0.000001 : 1.0/(1<<(index - 11)));
+			(1.0/(1ull<<(index - 11)) < 0.0000009) ? " <" : " ", 
+			(1.0/(1ull<<(index - 11)) < 0.0000009) ? 1.0/(1ull<<(index - 11)) + 0.000001 : 1.0/(1ull<<(index - 11)));
 	}
 	return buffer;
 }
