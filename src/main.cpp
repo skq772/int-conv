@@ -12,6 +12,7 @@
 #include <GLFW/glfw3.h>
 #include "stdvar.h"
 #include "i18n/i18n.cpp" // ??? doesn't work with .h
+#include "settings.cpp" // same here??
 #include "convert.h"
 #include "terminusttf.h"
 
@@ -40,14 +41,8 @@ I18n::Translator translator;
 // so we can do just id::whatever
 using I18n::id;
 
-// Settings
-i32 gui_size = 1;							// Size of the entire GUI
-bool multibit_invertion = false;			// Invert multiple bits with one click and mouse movement
-bool show_bit_weights = true;				// Show the tooltips
-bool color_bit_sections = true;				// Color background of binary representation
-bool invert_color = false;					// Color background of bit fields
-bool show_option_help = true;				// Show tooltip after hovering on a setting
-i32 selected_tab = 0;						// Current tab
+// global settings object
+Settings settings(&translator);
 
 // Strip file name from the path, copy it to new C string and append the new filename to it.
 // If the path or the new filename is a null pointer, zero is returned.
@@ -68,52 +63,6 @@ char* replaceFilename(const char* path, const char* new_filename)
 	while (index--)
 		result[index] = path[index];
 	return result;
-}
-
-// Save current settings to file.
-// If path is a null pointer, nothing happens.
-void saveSettings(const char* path)
-{
-	FILE* f = fopen(path, "w");
-	if (!f)
-		return;
-	fprintf(f, "%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n", 
-		(u16)translator.lang,
-		gui_size,
-		multibit_invertion,
-		show_bit_weights,
-		color_bit_sections,
-		invert_color,
-		show_option_help,
-		selected_tab);
-	fclose(f);
-}
-
-// Load variables from file.
-// If path is a null pointer or the file doesn't exist or has incorrect values, default settings are loaded.
-void loadSettings(const char* path)
-{
-	u16 tmp_lang = 1;
-	std::fstream f(path);
-	if(f.is_open())
-	{
-		f
-		>>tmp_lang
-		>>gui_size
-		>>multibit_invertion
-		>>show_bit_weights
-		>>color_bit_sections
-		>>invert_color
-		>>show_option_help
-		>>selected_tab;
-		f.close();
-	}
-	if (tmp_lang <= 2)
-		translator.lang = (I18n::lang_id)tmp_lang;
-	if (gui_size < 1 || gui_size > 20)
-		gui_size = 1;
-	if (selected_tab < 1 || selected_tab > 5)
-		selected_tab = 1;
 }
 
 // Print clickable bit chain.
@@ -364,8 +313,8 @@ int main(int argc, char** argv)
 
 	// Create window with graphics context
 	GLFWwindow* window = glfwCreateWindow(
-		window_w * ((float)gui_size/20 + 1), 
-		window_h * ((float)gui_size/20 + 1), 
+		window_w * ((float)settings.gui_size/20 + 1), 
+		window_h * ((float)settings.gui_size/20 + 1), 
 		"int-conv", 
 		nullptr, 
 		nullptr);
@@ -389,7 +338,7 @@ int main(int argc, char** argv)
 	// Path to file with saved settings
 	const char* settings_path = replaceFilename(*argv, "int-conv.settings");
 
-	loadSettings(settings_path);
+	settings.load(settings_path);
 
 	// Set Terminus font (from terminusttf.h)
 	ImFontConfig font_cfg;
@@ -402,7 +351,7 @@ int main(int argc, char** argv)
 	io.FontDefault = font_terminus;
 
 	// Current tab variable
-	i32 loaded_tab = selected_tab;
+	i32 loaded_tab = settings.selected_tab;
 
 	// Local variables that stores inputted numbers
 	u64 i_decimal = 0;
@@ -444,8 +393,8 @@ int main(int argc, char** argv)
 		// Set the window size, only if the demo window isn't open - we also enable resizing when that is the case
 		if (!demo_open) glfwSetWindowSize(
 			window, 
-			window_w * ((float)gui_size/20 + 1), 
-			window_h * ((float)gui_size/20 + 1));
+			window_w * ((float)settings.gui_size/20 + 1), 
+			window_h * ((float)settings.gui_size/20 + 1));
 
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
@@ -461,12 +410,12 @@ int main(int argc, char** argv)
 			ImGui::Begin("Main Window", NULL, 
 				ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar);
 			
-			ImGui::SetWindowFontScale((float)(gui_size-1)/20 + 1);
+			ImGui::SetWindowFontScale((float)(settings.gui_size-1)/20 + 1);
 			if (ImGui::BeginTabBar("MainTabBar"))
 			{
 				if (ImGui::BeginTabItem(_(id::integers), NULL, (loaded_tab == 1) ? ImGuiTabItemFlags_SetSelected : 0))
 				{
-					selected_tab = 1;
+					settings.selected_tab = 1;
 					ImGui::TextUnformatted(_(id::i_decimal));
 					if (ImGui::InputScalar("##i_decimal", ImGuiDataType_S64, &i_decimal))
 					{
@@ -491,13 +440,13 @@ int main(int argc, char** argv)
 					if ((i_sm_lbi = print_bits(
 						i_sm_binary, 
 						i_size, 
-						color_bit_sections && invert_color, 
+						settings.color_bit_sections && settings.invert_color, 
 						1ull<<63, 
-						((color_bit_sections && invert_color) || !(color_bit_sections && invert_color)) ? color_default : color_white, 
-						(color_bit_sections) ? color_light_blue : color_white, 
-						(color_bit_sections) ? color_dark_blue : color_white, 
-						(multibit_invertion) ? i_sm_lbi : -1, 
-						(show_bit_weights) ? integer_tooltips : 0)) != -1)
+						((settings.color_bit_sections && settings.invert_color) || !(settings.color_bit_sections && settings.invert_color)) ? color_default : color_white, 
+						(settings.color_bit_sections) ? color_light_blue : color_white, 
+						(settings.color_bit_sections) ? color_dark_blue : color_white, 
+						(settings.multibit_inversion) ? i_sm_lbi : -1, 
+						(settings.show_bit_weights) ? integer_tooltips : 0)) != -1)
 					{
 						convert::SMBinaryToInteger(i_sm_binary, 64, &i_decimal);
 						delete[] i_oc_binary; i_oc_binary = convert::integerToOCBinary(i_decimal, i_size);
@@ -508,13 +457,13 @@ int main(int argc, char** argv)
 					if ((i_oc_lbi = print_bits(
 						i_oc_binary, 
 						i_size, 
-						color_bit_sections && invert_color, 
+						settings.color_bit_sections && settings.invert_color, 
 						1ull<<63, 
-						((color_bit_sections && invert_color) || !(color_bit_sections && invert_color)) ? color_default : color_white, 
-						(color_bit_sections) ? color_light_blue : color_white, 
-						(color_bit_sections) ? color_dark_blue : color_white,  
-						(multibit_invertion) ? i_oc_lbi : -1, 
-						(show_bit_weights) ? integer_tooltips : 0)) != -1)
+						((settings.color_bit_sections && settings.invert_color) || !(settings.color_bit_sections && settings.invert_color)) ? color_default : color_white, 
+						(settings.color_bit_sections) ? color_light_blue : color_white, 
+						(settings.color_bit_sections) ? color_dark_blue : color_white,  
+						(settings.multibit_inversion) ? i_oc_lbi : -1, 
+						(settings.show_bit_weights) ? integer_tooltips : 0)) != -1)
 					{
 						convert::OCBinaryToInteger(i_oc_binary, 64, &i_decimal);
 						delete[] i_sm_binary; i_sm_binary = convert::integerToSMBinary(i_decimal, i_size);
@@ -525,13 +474,13 @@ int main(int argc, char** argv)
 					if ((i_tc_lbi = print_bits(
 						i_tc_binary, 
 						i_size, 
-						color_bit_sections && invert_color, 
+						settings.color_bit_sections && settings.invert_color, 
 						1ull<<63, 
-						((color_bit_sections && invert_color) || !(color_bit_sections && invert_color)) ? color_default : color_white, 
-						(color_bit_sections) ? color_light_blue : color_white, 
-						(color_bit_sections) ? color_dark_blue : color_white,  
-						(multibit_invertion) ? i_tc_lbi : -1, 
-						(show_bit_weights) ? integer_tooltips : 0)) != -1)
+						((settings.color_bit_sections && settings.invert_color) || !(settings.color_bit_sections && settings.invert_color)) ? color_default : color_white, 
+						(settings.color_bit_sections) ? color_light_blue : color_white, 
+						(settings.color_bit_sections) ? color_dark_blue : color_white,  
+						(settings.multibit_inversion) ? i_tc_lbi : -1, 
+						(settings.show_bit_weights) ? integer_tooltips : 0)) != -1)
 					{
 						convert::TCBinaryToInteger(i_tc_binary, 64, &i_decimal);
 						delete[] i_sm_binary; i_sm_binary = convert::integerToSMBinary(i_decimal, i_size);
@@ -541,9 +490,9 @@ int main(int argc, char** argv)
 				}
 				if (ImGui::BeginTabItem(_(id::floats), NULL, (loaded_tab == 2) ? ImGuiTabItemFlags_SetSelected : 0))
 				{
-					selected_tab = 2;
+					settings.selected_tab = 2;
 					ImGui::TextUnformatted(_(id::f_floating_point));
-					ImGui::SetNextItemWidth(18*font_size*((float)gui_size/20 + 1));
+					ImGui::SetNextItemWidth(18*font_size*((float)settings.gui_size/20 + 1));
 					if (ImGui::InputScalar("##f_floating_point", ImGuiDataType_Double, &f_floating_point))
 					{
 						delete[] f_float_binary; f_float_binary = convert::floatToBinary((f32)f_floating_point);
@@ -554,13 +503,13 @@ int main(int argc, char** argv)
 					if ((f_f_lbi = print_bits(
 						f_float_binary, 
 						32, 
-						color_bit_sections && invert_color, 
+						settings.color_bit_sections && settings.invert_color, 
 						0x807FFFFFFFFFFFFF, 
-						((color_bit_sections && invert_color) || !(color_bit_sections && invert_color)) ? color_default : color_white, 
-						(color_bit_sections) ? color_light_blue : color_white, 
-						(color_bit_sections) ? color_dark_blue : color_white,  
-						(multibit_invertion) ? f_f_lbi : -1, 
-						(show_bit_weights) ? float_tooltips : 0)) != -1)
+						((settings.color_bit_sections && settings.invert_color) || !(settings.color_bit_sections && settings.invert_color)) ? color_default : color_white, 
+						(settings.color_bit_sections) ? color_light_blue : color_white, 
+						(settings.color_bit_sections) ? color_dark_blue : color_white,  
+						(settings.multibit_inversion) ? f_f_lbi : -1, 
+						(settings.show_bit_weights) ? float_tooltips : 0)) != -1)
 					{
 						f32 f;
 						convert::binaryToFloat(f_float_binary, &f);
@@ -572,13 +521,13 @@ int main(int argc, char** argv)
 					if ((f_d_lbi = print_bits(
 						f_double_binary, 
 						64, 
-						color_bit_sections && invert_color, 
+						settings.color_bit_sections && settings.invert_color, 
 						0x800FFFFFFFFFFFFF, 
-						((color_bit_sections && invert_color) || !(color_bit_sections && invert_color)) ? color_default : color_white, 
-						(color_bit_sections) ? color_light_blue : color_white, 
-						(color_bit_sections) ? color_dark_blue : color_white,  
-						(multibit_invertion) ? f_d_lbi : -1, 
-						(show_bit_weights) ? double_tooltips : 0)) != -1)
+						((settings.color_bit_sections && settings.invert_color) || !(settings.color_bit_sections && settings.invert_color)) ? color_default : color_white, 
+						(settings.color_bit_sections) ? color_light_blue : color_white, 
+						(settings.color_bit_sections) ? color_dark_blue : color_white,  
+						(settings.multibit_inversion) ? f_d_lbi : -1, 
+						(settings.show_bit_weights) ? double_tooltips : 0)) != -1)
 					{
 						convert::binaryToDouble(f_double_binary, &f_floating_point);
 						delete[] f_float_binary; f_float_binary = convert::floatToBinary((f32)f_floating_point);
@@ -587,9 +536,9 @@ int main(int argc, char** argv)
 				}
 				if (ImGui::BeginTabItem(_(id::settings), NULL, (loaded_tab == 4) ? ImGuiTabItemFlags_SetSelected : 0))
 				{
-					selected_tab = 4;
+					settings.selected_tab = 4;
 					ImGui::TextUnformatted(_(id::s_language));
-					if (ImGui::IsItemHovered() && show_option_help)
+					if (ImGui::IsItemHovered() && settings.show_option_help)
 						ImGui::SetTooltip("%s", _(id::s_language_description));
 					if (ImGui::BeginCombo("##language", _(id::lang_name)))
 					{
@@ -607,33 +556,33 @@ int main(int argc, char** argv)
 					}
 					ImGui::TextUnformatted("\n");
 					ImGui::TextUnformatted(_(id::s_gui_size));
-					if (ImGui::IsItemHovered() && show_option_help)
+					if (ImGui::IsItemHovered() && settings.show_option_help)
 						ImGui::SetTooltip("%s", _(id::s_gui_size_description));
-					ImGui::SetNextItemWidth(font_size*6+3*((float)gui_size/20 + 1));
-					if (ImGui::InputInt("##gui_size", &gui_size, 1))
+					ImGui::SetNextItemWidth(font_size*6+3*((float)settings.gui_size/20 + 1));
+					if (ImGui::InputInt("##gui_size", &settings.gui_size, 1))
 					{
-						if (gui_size < 1)
-							gui_size = 1;
-						else if (gui_size > 20)
-							gui_size = 20;
+						if (settings.gui_size < 1)
+							settings.gui_size = 1;
+						else if (settings.gui_size > 20)
+							settings.gui_size = 20;
 					}
 					ImGui::TextUnformatted("\n");
-					ImGui::Checkbox(_(id::s_multibit_invertion), &multibit_invertion);
-					if (ImGui::IsItemHovered() && show_option_help)
+					ImGui::Checkbox(_(id::s_multibit_invertion), &settings.multibit_inversion);
+					if (ImGui::IsItemHovered() && settings.show_option_help)
 						ImGui::SetTooltip("%s", _(id::s_multibit_invertion_description));
-					ImGui::Checkbox(_(id::s_show_bit_weights), &show_bit_weights);
-					if (ImGui::IsItemHovered() && show_option_help)
+					ImGui::Checkbox(_(id::s_show_bit_weights), &settings.show_bit_weights);
+					if (ImGui::IsItemHovered() && settings.show_option_help)
 						ImGui::SetTooltip("%s", _(id::s_show_bit_weights_description));
-					ImGui::Checkbox(_(id::s_color_bit_sections), &color_bit_sections);
-					if (ImGui::IsItemHovered() && show_option_help)
+					ImGui::Checkbox(_(id::s_color_bit_sections), &settings.color_bit_sections);
+					if (ImGui::IsItemHovered() && settings.show_option_help)
 						ImGui::SetTooltip("%s", _(id::s_color_bit_sections_description));
-					ImGui::BeginDisabled(!color_bit_sections);
-					ImGui::Checkbox(_(id::s_invert_color), &invert_color);
-					if (ImGui::IsItemHovered() && show_option_help)
+					ImGui::BeginDisabled(!settings.color_bit_sections);
+					ImGui::Checkbox(_(id::s_invert_color), &settings.invert_color);
+					if (ImGui::IsItemHovered() && settings.show_option_help)
 						ImGui::SetTooltip("%s", _(id::s_invert_color_description));
 					ImGui::EndDisabled();
-					ImGui::Checkbox(_(id::s_show_option_help), &show_option_help);
-					if (ImGui::IsItemHovered() && show_option_help)
+					ImGui::Checkbox(_(id::s_show_option_help), &settings.show_option_help);
+					if (ImGui::IsItemHovered() && settings.show_option_help)
 						ImGui::SetTooltip("%s", _(id::s_show_option_help_description));
 
 					ImGui::Checkbox("Debug: Show ImGui demo window", &demo_open); // TODO: i18n
@@ -644,7 +593,7 @@ int main(int argc, char** argv)
 				if (ImGui::BeginTabItem(_(id::about), NULL, (loaded_tab == 5) ? ImGuiTabItemFlags_SetSelected : 0))
 				{
 					loaded_tab = 0;
-					selected_tab = 5;
+					settings.selected_tab = 5;
 					ImGui::TextUnformatted(_(id::a_text));
 					ImGui::EndTabItem();
 				}
@@ -675,7 +624,7 @@ int main(int argc, char** argv)
 	}
 
 	// Save the settings
-	saveSettings(settings_path);
+	settings.save(settings_path);
 
 	// Cleanup
 	ImGui_ImplOpenGL3_Shutdown();
