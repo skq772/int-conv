@@ -54,21 +54,21 @@ namespace I18n
 	};
 
 	const u16 lang_count = 2;
-    const u16 text_count = 34;
+	const u16 text_count = 34;
 
 	static const char *strings[lang_count][text_count] = {
 		{
 			"English (en_us)",
 			"Sign",
-			"plus",
-			"minus",
+			"positive",
+			"negative",
 			"Size in bits",
-			"Bit value",
+			"Bit weight",
 			"Integers",
 			"Decimal number",
 			"Sign-magnitude",
-			"One's completion",
-			"Two's completion",
+			"Ones' complement",
+			"Two's complement",
 			"Floats",
 			"Floating-point number",
 			"Exponent",
@@ -83,42 +83,43 @@ namespace I18n
 			"Multibit invertion",
 			"Invert many bits at once",
 			"Show bit weights",
-			"Show as tooltips weigths of bits",
+			"Show bit weights in a tooltip",
 			"Color bit sections",
-			"Show bit field sections using color",
+			"Highlight bit field sections",
 			"Invert color",
-			"Color background of bit fields",
+			"Color background of bit fields instead of the text",
 			"Show option help",
 			"Show tooltip after hovering on a setting",
 			"About",
-			R"(Hello there!
-You can find simple answers of simple questions here.
+			R"(Hi there!
+Here you can find a short FAQ.
 
-Q: What's even this?!
+Q: What even is this?!
 A: This is a simple number converter.
 
-Q: What types of convertion can I do here?
-A: It does custom, decimal/floating-point to binary
-   and vice versa convertions.
+Q: What types of conversion can I do here?
+A: You can convert decimal integers and IEEE 754
+   floating-point numbers to binary and vice-versa.
 
-Q: How to provide input?
-A: You can write a number in number inputs
-   and click on bits to invert those.
+Q: How to convert numbers?
+A: To convert from decimal, type the number into the
+   input box. Input binary numbers by clicking on bits
+   to toggle them.
 
-Q: What multibit invertion does?
-A: This option allows user to invert
-   multiple bits at once with just a mouse button holded
-   and cursor hovering over them.)"
+Q: What does "multibit inversion" do?
+A: This option allows you to invert
+   multiple bits at once by dragging over them
+   with your mouse. Whee!)"
 		},
 
 	{
 		"polski (pl_pl)",
 		"Znak",
-		"plus",
-		"minus",
+		"dodatni",
+		"ujemny",
 		"Rozmiar w bitach",
-		"Wartość bita",
-		"Integery",
+		"Waga",
+		"Całkowite",
 		"Liczba dziesiętna",
 		"Znak-moduł",
 		"U1",
@@ -127,13 +128,13 @@ A: This option allows user to invert
 		"Liczba zmiennoprzecinkowa",
 		"Wykładnik",
 		"Mantysa",
-		"Float",
-		"Double",
+		"float",
+		"double",
 		"Ustawienia",
 		"Język",
 		"Ustaw język interfejsu",
-		"Skala GUI",
-		"Ustaw skalę całego okna",
+		"Skala interfejsu",
+		"Ustaw skalę całego interfejsu",
 		"Inwersja wielobitowa",
 		"Inwertuj wiele bitów naraz",
 		"Pokazuj wagi bitów",
@@ -152,15 +153,15 @@ Znajdziesz tu proste odpowiedzi na proste pytania.
 P: Co to niby ma być?!
 O: To jest prosty konwerter do liczb.
 
-P: Co to umie zrobić?
-O: Potrafi przekonwertować liczby dowolne,
-   dziesiętne/zmiennoprzecinkowe na binarny i na odwrót.
+P: Co to umie zrobić? (sic)
+O: Potrafi przekonwertować liczby dziesiętne całkowite i
+   zmiennoprzecinkowe do sys. binarnego i na odwrót.
 
 P: Jak wprowadzać liczby?
-O: Wpisujesz liczbę dziesiętną w pole,
+O: Wpisz liczbę dziesiętną w pole,
    a kliknięcie w odpowiedni bit odwraca jego wartość.
 
-P: Co robi opcja \"Inwersja wielobitowa\"?
+P: Co robi opcja "Inwersja wielobitowa"?
 O: Opcja ta umożliwia użytkownikowi na odwróceniu
    wartości wielu bitów na raz poprzez tylko przytrzymaniu
    przycisku myszy i najechaniu na nie.)"
